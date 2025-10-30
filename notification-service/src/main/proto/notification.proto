@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package com.nnson128.grpc;
+
+option java_multiple_files = true;
+option java_package = "com.nnson128.grpc.notification";
+
+service NotificationService {
+  rpc sendNotification (NotificationRequest) returns (NotificationResponse);
+}
+
+message NotificationRequest {
+  string message = 1;
+}
+
+message NotificationResponse {
+  string status = 1;
+}

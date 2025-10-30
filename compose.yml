@@ -1,0 +1,212 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      # === BỔ SUNG CHO SCHEMA REGISTRY ===
+      KAFKA_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+
+  # === THÊM DỊCH VỤ MỚI ===
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.3.0
+    container_name: schema-registry
+    depends_on:
+      - kafka
+    ports:
+      # Schema Registry sẽ chạy ở cổng 8081
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka:29092'
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD-root}
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user
+      MYSQL_DATABASE: app_db
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+      # - ./shopping.sql:/docker-entrypoint-initdb.d/shopping.sql
+
+  keycloak-mysql:
+    image: mysql:8.0
+    restart: always
+    volumes:
+      - ./data/mysql_keycloak_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: keycloak
+      MYSQL_USER: keycloak
+      MYSQL_PASSWORD: password
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.0
+    command: [ "start-dev", "--import-realm" ]
+    restart: always
+    depends_on:
+      keycloak-mysql:
+        condition: service_healthy
+    environment:
+      KC_DB: mysql
+      KC_DB_URL_HOST: keycloak-mysql
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: password
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak-realms/:/opt/keycloak/data/import/
+      - ./keycloak-realms:/opt/keycloak/data/export
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - ./data/redis:/data
+
+  discovery-server:
+    build:
+      context: ./discovery-server
+      dockerfile: Dockerfile
+    ports:
+      - "8761:8761"
+
+  # api-gateway:
+  #   image: api-gateway:latest
+  #   container_name: api-gateway
+  #   build:
+  #     context: ./api-gateway
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8888:8888"
+  #   environment:
+  #     SPRING_PROFILES_ACTIVE: docker
+  #     SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED: "true"
+  #   depends_on:
+  #     - discovery-server
+  #     - keycloak
+
+  # product-service:
+  #   image: product-service:latest
+  #   container_name: product-service
+  #   build:
+  #     context: ./product-service
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8004:8004"
+  #   environment:
+  #     SPRING_PROFILES_ACTIVE: docker
+  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ecommerce_products?createDatabaseIfNotExist=true
+  #     SPRING_DATASOURCE_USERNAME: root
+  #     SPRING_DATASOURCE_PASSWORD: root123
+  #   depends_on:
+  #     - mysql
+  #     - discovery-server
+  #     - keycloak
+
+  # cart-service:
+  #   image: cart-service:latest
+  #   container_name: cart-service
+  #   build:
+  #     context: ./cart-service
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8005:8005"
+  #   environment:
+  #     SPRING_PROFILES_ACTIVE: docker
+  #     SPRING_REDIS_HOST: redis
+  #     SPRING_REDIS_PORT: 6379
+  #   depends_on:
+  #     - redis
+  #     - discovery-server
+  #     - keycloak
+
+  # payment-service:
+  #   image: payment-service:latest
+  #   container_name: payment-service
+  #   build:
+  #     context: ./payment-service
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8006:8006"
+  #   environment:
+  #     SPRING_PROFILES_ACTIVE: docker
+  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ecommerce_payments?createDatabaseIfNotExist=true
+  #     SPRING_DATASOURCE_USERNAME: root
+  #     SPRING_DATASOURCE_PASSWORD: root123
+  #   depends_on:
+  #     - mysql
+  #     - discovery-server
+  #     - keycloak
+
+  # ecommerce-order-service:
+  #   image: ecommerce-order-service:latest
+  #   container_name: ecommerce-order-service
+  #   build:
+  #     context: ./ecommerce-order-service
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8007:8007"
+  #   environment:
+  #     SPRING_PROFILES_ACTIVE: docker
+  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ecommerce_orders?createDatabaseIfNotExist=true
+  #     SPRING_DATASOURCE_USERNAME: root
+  #     SPRING_DATASOURCE_PASSWORD: root123
+  #   depends_on:
+  #     - mysql
+  #     - discovery-server
+  #     - keycloak
+
+  # notification-service:
+  #   image: notification-service:latest
+  #   container_name: notification-service
+  #   build:
+  #     context: ./notification-service
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8003:8003"
+  #   environment:
+  #     SPRING_PROFILES_ACTIVE: docker
+  #   depends_on:
+  #     - kafka
+  #     - discovery-server
+  #     - keycloak
+

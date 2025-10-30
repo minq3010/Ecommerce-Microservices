@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package com.nnson128.grpc;
+
+option java_multiple_files = true;
+option java_package = "com.nnson128.grpc.user";
+
+service UserService {
+  rpc GetUserFromJwt (GetUserFromJwtRequest) returns (UserMessage);
+}
+
+message GetUserFromJwtRequest {
+  string token = 1;
+}
+
+message UserMessage {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+  string first_name = 4;
+  string last_name = 5;
+  bool email_verified = 6;
+  repeated string roles = 7;
+  int64 token_issued_at = 8;
+  int64 token_expires_at = 9;
+}

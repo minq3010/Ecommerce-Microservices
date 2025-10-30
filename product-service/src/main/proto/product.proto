@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package com.nnson128.grpc;
+
+option java_multiple_files = true;
+option java_package = "com.nnson128.grpc.product";
+
+service ProductService {
+  rpc GetProductInfo (GetProductRequest) returns (ProductMessage);
+  rpc CheckProductStock (CheckStockRequest) returns (StockMessage);
+}
+
+message GetProductRequest {
+  string product_id = 1;
+}
+
+message ProductMessage {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string price = 4;
+  int32 stock = 5;
+  string category = 6;
+  string status = 7;
+}
+
+message CheckStockRequest {
+  string product_id = 1;
+  int32 quantity = 2;
+}
+
+message StockMessage {
+  bool available = 1;
+  int32 current_stock = 2;
+}

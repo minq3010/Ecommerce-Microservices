@@ -1,0 +1,9 @@
+{
+  "namespace": "com.nnson128.avro.model",
+  "type": "record",
+  "name": "UserEvent",
+  "fields": [
+    { "name": "userId", "type": "string" },
+    { "name": "email", "type": "string" }
+  ]
+}

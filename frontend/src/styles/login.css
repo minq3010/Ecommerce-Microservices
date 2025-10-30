@@ -1,0 +1,94 @@
+.login-container {
+  background: #ffffff; /* white background for cleaner look */
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-card {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #f0f0f0;
+  /* softer, subtle shadow to reduce visual weight */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s ease;
+}
+
+.login-card .ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+  background: #ffffff; /* keep header white for minimal look */
+  border-radius: 10px 10px 0 0;
+}
+
+.login-card .ant-card-head .ant-card-head-title {
+  color: #222; /* dark title color */
+  font-weight: 600;
+}
+
+.login-card .ant-form-item {
+  margin-bottom: 16px;
+}
+
+.login-card .ant-input,
+.login-card .ant-input-password {
+  border-radius: 6px;
+  background-color: #fafafa;
+}
+
+.login-card .ant-input:hover,
+.login-card .ant-input-password:hover,
+.login-card .ant-input:focus,
+.login-card .ant-input-password:focus {
+  background-color: white;
+}
+
+.login-card .ant-input-affix-wrapper {
+  background-color: #fafafa;
+  border-radius: 6px;
+}
+
+.login-card .ant-input-affix-wrapper:hover,
+.login-card .ant-input-affix-wrapper:focus {
+  background-color: white;
+}
+
+.login-card .ant-btn-primary {
+  background: #667eea; /* subtle solid color */
+  border: none;
+  height: 40px;
+  font-weight: 500;
+  border-radius: 6px;
+  font-size: 15px;
+}
+
+.login-card .ant-btn-primary:hover {
+  background: #5a6ad6;
+}
+
+.login-card a {
+  color: #667eea;
+  text-decoration: none;
+}
+
+.login-card a:hover {
+  color: #5a6ad6;
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .login-container {
+    padding: 20px;
+  }
+
+  .login-card {
+    border-radius: 8px;
+  }
+
+  .login-card .ant-card-head .ant-card-head-title {
+    font-size: 20px;
+  }
+}

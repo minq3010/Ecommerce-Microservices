@@ -1,0 +1,75 @@
+# Application Info
+spring:
+  application:
+    name: user-service
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:app_db}
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    generate-ddl: true
+  security:
+    oauth2:
+      resource server:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/app-realms
+          jwk-set-uri: http://keycloak:8080/realms/app-realms/protocol/openid-connect/certs
+
+server:
+  port: 9007
+
+# Eureka Discovery
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://discovery-server:8761/eureka
+  instance:
+    prefer-ip-address: true
+    hostname: ${spring.application.name}
+    instance-id: ${spring.application.name}
+
+# Keycloak (Docker)
+keycloak:
+  auth-server-url: http://keycloak:8080
+  realm: app-realms
+  resource: app_client
+  credentials:
+    secret: pV3gPL2JeKWHO2of2hjSQvfvL4wy6rAv
+
+# OAuth2 Resource Server (Docker)
+# (Validation của JWT lấy từ Keycloak)
+
+# Feign Configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 10000
+
+# Media Service
+media:
+  service:
+    name: media-service
+  service-url: http://${MEDIA_SERVICE:localhost}:9004
+
+# JWT Debug
+jwt:
+  debug:
+    enabled: false
+
+# gRPC server configuration
+grpc:
+  server:
+    port: 0
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.sonnguyen.userservice: INFO
