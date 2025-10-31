@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Layout, Menu, Button, Avatar, Dropdown, Space } from 'antd';
-import { ShoppingOutlined, ShoppingCartOutlined, FileTextOutlined, LogoutOutlined, UserOutlined, DashboardOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UnorderedListOutlined, GiftOutlined, BarChartOutlined, BookOutlined, SettingOutlined } from '@ant-design/icons';
+import { ShoppingOutlined, ShoppingCartOutlined, FileTextOutlined, LogoutOutlined, UserOutlined, DashboardOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UnorderedListOutlined, GiftOutlined, BarChartOutlined, BookOutlined, SettingOutlined, DollarOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../redux/slices/authSlice';
@@ -26,6 +26,7 @@ const AdminLayout = ({ children }) => {
     if (location.pathname.includes('users')) return 'users';
     if (location.pathname.includes('orders')) return 'orders';
     if (location.pathname.includes('carts')) return 'carts';
+    if (location.pathname.includes('payments')) return 'payments';
     if (location.pathname.includes('promotions')) return 'promotions';
     if (location.pathname.includes('reports')) return 'reports';
     if (location.pathname.includes('blog')) return 'blog';
@@ -66,6 +67,12 @@ const AdminLayout = ({ children }) => {
       icon: <FileTextOutlined style={{ fontSize: '16px' }} />,
       label: 'Orders',
       onClick: () => navigate('/admin/orders'),
+    },
+    {
+      key: 'payments',
+      icon: <DollarOutlined style={{ fontSize: '16px' }} />,
+      label: 'Payments',
+      onClick: () => navigate('/admin/payments'),
     },
     {
       type: 'divider',

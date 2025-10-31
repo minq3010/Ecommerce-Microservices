@@ -14,4 +14,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
     List<Product> findByStatus(String status);
     Page<Product> findByStatusAndCategoryOrderByCreatedAtDesc(String status, String category, Pageable pageable);
+    
+    // Delete products by IDs
+    long deleteByIdIn(List<String> ids);
 }

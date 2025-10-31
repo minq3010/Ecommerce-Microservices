@@ -2,11 +2,14 @@ package com.nnson128.product_service.service;
 
 import com.nnson128.product_service.dto.ProductRequestDTO;
 import com.nnson128.product_service.dto.ProductResponseDTO;
+import com.nnson128.product_service.dto.BulkImportProductRequestDTO;
+import com.nnson128.product_service.dto.BulkImportResponseDTO;
 import com.nnson128.product_service.entity.Product;
 import com.nnson128.product_service.entity.Category;
 import com.nnson128.product_service.repository.ProductRepository;
 import com.nnson128.product_service.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,10 +18,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class ProductService {
 
     private final ProductRepository productRepository;
@@ -26,8 +31,20 @@ public class ProductService {
 
     // Create Product
     public ProductResponseDTO createProduct(ProductRequestDTO request) {
-        Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+        // Handle categoryName from import or categoryId from API
+        Category category = null;
+        
+        if (request.getCategoryName() != null && !request.getCategoryName().trim().isEmpty()) {
+            // Find category by name (for imports)
+            category = categoryRepository.findByName(request.getCategoryName())
+                    .orElseThrow(() -> new RuntimeException("Category not found: " + request.getCategoryName()));
+        } else if (request.getCategoryId() != null && !request.getCategoryId().trim().isEmpty()) {
+            // Find category by ID (for API calls)
+            category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+        } else {
+            throw new RuntimeException("Category ID or name is required");
+        }
         
         Product product = Product.builder()
                 .name(request.getName())
@@ -165,6 +182,102 @@ public class ProductService {
                 .reviewCount(product.getReviewCount())
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
+                .build();
+    }
+
+    // Delete products in bulk
+    public long deleteProductsInBulk(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new RuntimeException("No product IDs provided");
+        }
+        return productRepository.deleteByIdIn(ids);
+    }
+
+    // Bulk import products from Excel
+    public BulkImportResponseDTO bulkImportProducts(BulkImportProductRequestDTO request) {
+        if (request.getProducts() == null || request.getProducts().isEmpty()) {
+            throw new RuntimeException("No products provided for import");
+        }
+
+        List<BulkImportResponseDTO.ImportErrorDTO> errors = new ArrayList<>();
+        int successCount = 0;
+        int totalProducts = request.getProducts().size();
+
+        for (ProductRequestDTO productRequest : request.getProducts()) {
+            try {
+                // Validate required fields
+                if (productRequest.getName() == null || productRequest.getName().trim().isEmpty()) {
+                    errors.add(BulkImportResponseDTO.ImportErrorDTO.builder()
+                            .productName("Unknown")
+                            .errorMessage("Product name is required")
+                            .build());
+                    continue;
+                }
+
+                // Check categoryName or categoryId
+                String categoryIdentifier = productRequest.getCategoryName() != null && !productRequest.getCategoryName().trim().isEmpty()
+                        ? productRequest.getCategoryName()
+                        : productRequest.getCategoryId();
+                
+                if (categoryIdentifier == null || categoryIdentifier.trim().isEmpty()) {
+                    errors.add(BulkImportResponseDTO.ImportErrorDTO.builder()
+                            .productName(productRequest.getName())
+                            .errorMessage("Category is required")
+                            .build());
+                    continue;
+                }
+
+                if (productRequest.getPrice() == null || productRequest.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
+                    errors.add(BulkImportResponseDTO.ImportErrorDTO.builder()
+                            .productName(productRequest.getName())
+                            .errorMessage("Price must be greater than 0")
+                            .build());
+                    continue;
+                }
+
+                if (productRequest.getStock() == null || productRequest.getStock() < 0) {
+                    errors.add(BulkImportResponseDTO.ImportErrorDTO.builder()
+                            .productName(productRequest.getName())
+                            .errorMessage("Stock must be >= 0")
+                            .build());
+                    continue;
+                }
+
+                // Check if category exists (by name or ID)
+                boolean categoryExists = false;
+                if (productRequest.getCategoryName() != null && !productRequest.getCategoryName().trim().isEmpty()) {
+                    categoryExists = categoryRepository.existsByName(productRequest.getCategoryName());
+                } else if (productRequest.getCategoryId() != null && !productRequest.getCategoryId().trim().isEmpty()) {
+                    categoryExists = categoryRepository.existsById(productRequest.getCategoryId());
+                }
+                
+                if (!categoryExists) {
+                    errors.add(BulkImportResponseDTO.ImportErrorDTO.builder()
+                            .productName(productRequest.getName())
+                            .errorMessage("Category not found: " + categoryIdentifier)
+                            .build());
+                    continue;
+                }
+
+                // Create and save product
+                createProduct(productRequest);
+                successCount++;
+                log.info("Product imported successfully: {}", productRequest.getName());
+
+            } catch (Exception e) {
+                errors.add(BulkImportResponseDTO.ImportErrorDTO.builder()
+                        .productName(productRequest.getName() != null ? productRequest.getName() : "Unknown")
+                        .errorMessage(e.getMessage())
+                        .build());
+                log.error("Error importing product: {}", productRequest.getName(), e);
+            }
+        }
+
+        return BulkImportResponseDTO.builder()
+                .totalProducts(totalProducts)
+                .successCount(successCount)
+                .failCount(totalProducts - successCount)
+                .errors(errors.isEmpty() ? null : errors)
                 .build();
     }
 

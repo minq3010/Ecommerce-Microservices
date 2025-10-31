@@ -38,7 +38,7 @@ verificationClient.interceptors.request.use(
   }
 );
 
-// Add a response interceptor to handle 401 errors and mark unauthorized
+// Add a response interceptor to handle 401 errors and redirect to login
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -49,26 +49,19 @@ apiClient.interceptors.response.use(
         status: error.response?.status,
       });
       error.isUnauthorized = true;
+      
+      // Clear localStorage on 401
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      
+      // Redirect to login if not already there
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
 );
-// Response interceptor to handle 401 errors
-// apiClient.interceptors.response.use(
-//   (response) => response,
-//   (error) => {
-//     if (error.response?.status === 401) {
-//       // Clear localStorage on 401
-//       localStorage.removeItem('token');
-//       localStorage.removeItem('user');
-//       // Redirect to login if not already there
-//       if (window.location.pathname !== '/login') {
-//         window.location.href = '/login';
-//       }
-//     }
-//     return Promise.reject(error);
-//   }
-// );
 
 // Verification client does NOT redirect on 401 - just reject
 // This allows App.jsx to handle token verification gracefully

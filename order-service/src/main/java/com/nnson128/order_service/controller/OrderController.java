@@ -68,6 +68,7 @@ public class OrderController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Page<OrderResponseDTO> data = orderService.getAllOrders(page, size);
+        log.info("Get all orders successfully");
         return ResponseEntity.ok(ApiResponse.<Page<OrderResponseDTO>>builder()
                 .success(true)
                 .message("Get all orders successfully")

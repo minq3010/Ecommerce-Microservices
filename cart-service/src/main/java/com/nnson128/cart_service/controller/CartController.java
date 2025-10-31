@@ -7,12 +7,13 @@ import com.nnson128.cart_service.service.CartService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/cart")
+@RequestMapping("/api/v1/carts")
 @RequiredArgsConstructor
 public class CartController {
 
@@ -72,6 +73,56 @@ public class CartController {
     @DeleteMapping
     public ResponseEntity<ApiResponse<Object>> clearCart(Authentication authentication) {
         String userId = authentication.getName();
+        cartService.clearCart(userId);
+        return ResponseEntity.ok(ApiResponse.builder()
+                .success(true)
+                .message("Cart cleared successfully")
+                .build());
+    }
+
+    // ==================== ADMIN ENDPOINTS ====================
+
+    @GetMapping("/admin/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<CartDTO>> getCartByUserId(@PathVariable String userId) {
+        CartDTO cart = cartService.getCart(userId);
+        return ResponseEntity.ok(ApiResponse.<CartDTO>builder()
+                .success(true)
+                .message("Get cart successfully")
+                .data(cart)
+                .build());
+    }
+
+    @PutMapping("/admin/{userId}/items/{productId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<CartDTO>> updateCartItemAsAdmin(
+            @PathVariable String userId,
+            @PathVariable String productId,
+            @RequestParam Integer quantity) {
+        CartDTO cart = cartService.updateCartItem(userId, productId, quantity);
+        return ResponseEntity.ok(ApiResponse.<CartDTO>builder()
+                .success(true)
+                .message("Cart item updated successfully")
+                .data(cart)
+                .build());
+    }
+
+    @DeleteMapping("/admin/{userId}/items/{productId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<CartDTO>> removeItemFromCartAsAdmin(
+            @PathVariable String userId,
+            @PathVariable String productId) {
+        CartDTO cart = cartService.removeItemFromCart(userId, productId);
+        return ResponseEntity.ok(ApiResponse.<CartDTO>builder()
+                .success(true)
+                .message("Item removed from cart successfully")
+                .data(cart)
+                .build());
+    }
+
+    @DeleteMapping("/admin/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Object>> clearCartAsAdmin(@PathVariable String userId) {
         cartService.clearCart(userId);
         return ResponseEntity.ok(ApiResponse.builder()
                 .success(true)

@@ -13,13 +13,15 @@ import UnauthorizedPage from "./pages/UnauthorizedPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminProductsPage from "./pages/AdminProductsPage";
 import AdminOrdersPage from "./pages/AdminOrdersPage";
-import CartsPage from "./pages/CartsPage";
+import AdminCartsPage from "./pages/AdminCartsPage";
+import AdminPaymentsPage from "./pages/AdminPaymentsPage";
 import AdminCategoriesPage from "./pages/AdminCategoriesPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AdminPromotionsPage from "./pages/AdminPromotionsPage";
 import AdminReportsPage from "./pages/AdminReportsPage";
 import AdminBlogPage from "./pages/AdminBlogPage";
 import AdminSettingsPage from "./pages/AdminSettingsPage";
+import PaymentHistory from "./pages/PaymentHistory";
 import { login, logout, verificationCompleted } from "./redux/slices/authSlice";
 import { verificationClient } from "./redux/apiClient";
 
@@ -118,7 +120,11 @@ function App() {
         />
         <Route
           path="/admin/carts"
-          element={<ProtectedRoute element={<CartsPage />} />}
+          element={<ProtectedRoute element={<AdminCartsPage />} />}
+        />
+        <Route
+          path="/admin/payments"
+          element={<ProtectedRoute element={<AdminPaymentsPage />} />}
         />
         <Route
           path="/admin/categories"
@@ -148,6 +154,12 @@ function App() {
         <Route
           path="/admin/settings"
           element={<ProtectedRoute element={<AdminSettingsPage />} />}
+        />
+
+        {/* User Routes */}
+        <Route
+          path="/payments/history"
+          element={<ProtectedRoute element={<PaymentHistory />} />}
         />
 
         {/* Default Route */}

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, InputNumber, Select, message, Space, Popconfirm, Card, Row, Col, Statistic, Badge, Empty, Tooltip, Tabs, Checkbox } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { Table, Button, Modal, Form, Input, InputNumber, Select, message, Space, Popconfirm, Card, Row, Col, Statistic, Badge, Empty, Tooltip, Tabs, Checkbox, Upload } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, SearchOutlined, DownloadOutlined, UploadOutlined } from '@ant-design/icons';
 import { apiClient } from '../redux/apiClient';
 import AdminLayout from '../layout/AdminLayout';
+import { exportProductsToExcel, importProductsFromExcel, downloadProductTemplate } from '../utils/excelUtils';
 
 const AdminProductsPage = () => {
   const [products, setProducts] = useState([]);
@@ -11,14 +12,25 @@ const AdminProductsPage = () => {
   const [visible, setVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [form] = Form.useForm();
-  const [pagination, setPagination] = useState({ page: 0, size: 10, total: 0 });
+  const [pagination, setPagination] = useState({ page: 0, size: 6, total: 0 });
   const [searchText, setSearchText] = useState('');
   const [failedImages, setFailedImages] = useState(new Set());
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [deletingBulk, setDeletingBulk] = useState(false);
+  const [importingBulk, setImportingBulk] = useState(false);
 
   useEffect(() => {
-    fetchProducts();
-    fetchCategories();
+    if (searchText.trim()) {
+      handleSearch();
+    } else {
+      fetchProducts();
+    }
   }, [pagination.page, pagination.size]);
+
+  useEffect(() => {
+    // Reset to page 0 when search text changes
+    setPagination(prev => ({ ...prev, page: 0 }));
+  }, [searchText]);
 
   const fetchCategories = async () => {
     try {
@@ -29,6 +41,34 @@ const AdminProductsPage = () => {
       }
     } catch (error) {
       console.error('Failed to fetch categories:', error);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchText.trim()) {
+      fetchProducts();
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await apiClient.get(
+        `/products/search?keyword=${encodeURIComponent(searchText)}&page=${pagination.page}&size=${pagination.size}`
+      );
+      setFailedImages(new Set());
+      
+      if (response.data.success) {
+        const content = response.data.data?.content || [];
+        setProducts(Array.isArray(content) ? content : []);
+        setPagination(prev => ({
+          ...prev,
+          total: response.data.data?.totalElements || 0
+        }));
+      }
+    } catch (error) {
+      message.error('Failed to search products');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -118,7 +158,131 @@ const AdminProductsPage = () => {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedRowKeys.length === 0) {
+      message.warning('Please select products to delete');
+      return;
+    }
+
+    Modal.confirm({
+      title: `Delete ${selectedRowKeys.length} products?`,
+      content: `Are you sure you want to delete ${selectedRowKeys.length} selected products? This action cannot be undone.`,
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        setDeletingBulk(true);
+        try {
+          await apiClient.delete('/products', {
+            data: { ids: selectedRowKeys }
+          });
+          message.success(`${selectedRowKeys.length} products deleted successfully!`);
+          setSelectedRowKeys([]);
+          fetchProducts();
+        } catch (error) {
+          message.error(error.response?.data?.message || 'Failed to delete products');
+        } finally {
+          setDeletingBulk(false);
+        }
+      },
+    });
+  };
+
+  const handleExportExcel = () => {
+    try {
+      exportProductsToExcel(products, `products-${new Date().getTime()}.xlsx`);
+      message.success('Products exported successfully!');
+    } catch (error) {
+      message.error('Failed to export products');
+    }
+  };
+
+  const handleImportExcel = async (file) => {
+    setImportingBulk(true);
+    try {
+      const importedProducts = await importProductsFromExcel(file);
+      
+      // Show import preview modal
+      Modal.confirm({
+        title: 'Import Products',
+        content: `Found ${importedProducts.length} valid products to import. Continue?`,
+        okText: 'Import',
+        cancelText: 'Cancel',
+        onOk: async () => {
+          try {
+            // Send all products in one batch request
+            const response = await apiClient.post('/products/import', {
+              products: importedProducts
+            });
+
+            const result = response.data.data;
+            message.success(
+              `Imported ${result.successCount}/${result.totalProducts} products successfully!${
+                result.failCount > 0 ? ` (${result.failCount} failed)` : ''
+              }`
+            );
+
+            // Show error details if any
+            if (result.errors && result.errors.length > 0) {
+              Modal.info({
+                title: 'Import Errors',
+                content: (
+                  <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                    {result.errors.map((error, index) => (
+                      <div key={index} style={{ marginBottom: '8px', color: '#ff4d4f' }}>
+                        <strong>{error.productName}:</strong> {error.errorMessage}
+                      </div>
+                    ))}
+                  </div>
+                ),
+              });
+            }
+
+            fetchProducts();
+          } catch (error) {
+            message.error(error.response?.data?.message || 'Error importing products');
+          }
+        },
+      });
+    } catch (error) {
+      message.error(error.message || 'Failed to read Excel file');
+    } finally {
+      setImportingBulk(false);
+    }
+
+    return false; // Prevent default upload behavior
+  };
+
   const columns = [
+    {
+      title: (
+        <Checkbox 
+          checked={selectedRowKeys.length === products.length && products.length > 0}
+          indeterminate={selectedRowKeys.length > 0 && selectedRowKeys.length < products.length}
+          onChange={(e) => {
+            if (e.target.checked) {
+              setSelectedRowKeys(products.map(p => p.id));
+            } else {
+              setSelectedRowKeys([]);
+            }
+          }}
+        />
+      ),
+      key: 'checkbox',
+      width: 50,
+      render: (_, record) => (
+        <Checkbox 
+          checked={selectedRowKeys.includes(record.id)}
+          onChange={(e) => {
+            if (e.target.checked) {
+              setSelectedRowKeys([...selectedRowKeys, record.id]);
+            } else {
+              setSelectedRowKeys(selectedRowKeys.filter(key => key !== record.id));
+            }
+          }}
+        />
+      ),
+    },
     {
       title: '📷 Image',
       dataIndex: 'imageUrl',
@@ -236,7 +400,7 @@ const AdminProductsPage = () => {
           <Card style={{ boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03)' }}>
             <Statistic
               title="Total Products"
-              value={products.length}
+              value={pagination.total}
               prefix="📦"
               valueStyle={{ color: '#1890ff' }}
             />
@@ -273,6 +437,55 @@ const AdminProductsPage = () => {
         }
         extra={
           <Space>
+            {selectedRowKeys.length > 0 && (
+              <>
+                <Popconfirm
+                  title={`Delete ${selectedRowKeys.length} products?`}
+                  description="Are you sure you want to delete these products? This action cannot be undone."
+                  onConfirm={handleBulkDelete}
+                  okText="Delete"
+                  cancelText="Cancel"
+                  okButtonProps={{ danger: true }}
+                >
+                  <Button 
+                    danger 
+                    icon={<DeleteOutlined />}
+                    loading={deletingBulk}
+                  >
+                    Delete ({selectedRowKeys.length})
+                  </Button>
+                </Popconfirm>
+              </>
+            )}
+            <Tooltip title="Download all products">
+              <Button 
+                icon={<DownloadOutlined />}
+                onClick={handleExportExcel}
+              >
+                Export Excel
+              </Button>
+            </Tooltip>
+            <Upload
+              maxCount={1}
+              accept=".xlsx,.xls"
+              beforeUpload={handleImportExcel}
+              showUploadList={false}
+            >
+              <Tooltip title="Import products from Excel">
+                <Button 
+                  icon={<UploadOutlined />}
+                  loading={importingBulk}
+                >
+                  Import Excel
+                </Button>
+              </Tooltip>
+            </Upload>
+            <Button 
+              onClick={() => downloadProductTemplate(categories)}
+              size="small"
+            >
+              Download Template
+            </Button>
             <Button 
               type="primary" 
               icon={<PlusOutlined />}

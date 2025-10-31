@@ -5,9 +5,11 @@ server:
 
 spring:
   application:
-    name: ecommerce-order-service
+    name: order-service
+
+#  database
   datasource:
-    url: jdbc:mysql://localhost:3306/app_db?createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3306/app_db
     username: user
     password: user
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -18,20 +20,23 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+# oauth 2
   security:
     oauth2:
-      resourceserver:
+      resource server:
         jwt:
-          issuer-uri: http://localhost:8080/realms/app-realms
-          jwk-set-uri: http://localhost:8080/realms/app-realms/protocol/openid-connect/certs
+          issuer-uri: http://keycloak:8080/realms/app-realms
+          jwk-set-uri: http://keycloak:8080/realms/app-realms/protocol/openid-connect/certs
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://discovery-server:8761/eureka/
   instance:
     prefer-ip-address: true
-    hostname: localhost
+    hostname: ${spring.application.name}
+    instance-id: ${spring.application.name}
 
 grpc:
   server:

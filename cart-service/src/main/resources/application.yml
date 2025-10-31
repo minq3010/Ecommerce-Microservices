@@ -7,7 +7,7 @@ spring:
   application:
     name: cart-service
   datasource:
-    url: jdbc:mysql://localhost:3306/app_db?createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3306/app_db
     username: user
     password: user
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -20,10 +20,10 @@ spring:
         format_sql: true
   security:
     oauth2:
-      resourceserver:
+      resource server:
         jwt:
-          issuer-uri: http://localhost:8080/realms/app-realms
-          jwk-set-uri: http://localhost:8080/realms/app-realms/protocol/openid-connect/certs
+          issuer-uri: http://keycloak:8080/realms/app-realms
+          jwk-set-uri: http://keycloak:8080/realms/app-realms/protocol/openid-connect/certs
 
 eureka:
   client:
@@ -31,8 +31,8 @@ eureka:
       defaultZone: http://localhost:8761/eureka/
   instance:
     prefer-ip-address: true
-    hostname: localhost
-
+    hostname: ${spring.application.name}
+    instance-id: ${spring.application.name}
 grpc:
   server:
     port: 50052

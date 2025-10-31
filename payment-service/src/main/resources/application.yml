@@ -7,28 +7,32 @@ spring:
   application:
     name: payment-service
   datasource:
-    url: jdbc:mysql://mysql:3306/ecommerce_payments?createDatabaseIfNotExist=true
-    username: root
-    password: root123
+    url: jdbc:mysql://localhost:3306/app_db
+    username: user
+    password: user
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
   security:
     oauth2:
-      resourceserver:
+      resource server:
         jwt:
           issuer-uri: http://keycloak:8080/realms/app-realms
           jwk-set-uri: http://keycloak:8080/realms/app-realms/protocol/openid-connect/certs
 
 eureka:
   client:
-    service-url:
-      defaultZone: http://discovery-server:8761/eureka/
+    serviceUrl:
+      defaultZone: http://discovery-server:8761/eureka
   instance:
     prefer-ip-address: true
-    hostname: payment-service
+    hostname: ${spring.application.name}
+    instance-id: ${spring.application.name}
 
 management:
   endpoints:

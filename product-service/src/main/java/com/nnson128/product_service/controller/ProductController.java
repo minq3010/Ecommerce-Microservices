@@ -1,6 +1,9 @@
 package com.nnson128.product_service.controller;
 
 import com.nnson128.product_service.dto.ApiResponse;
+import com.nnson128.product_service.dto.BulkDeleteRequestDTO;
+import com.nnson128.product_service.dto.BulkImportProductRequestDTO;
+import com.nnson128.product_service.dto.BulkImportResponseDTO;
 import com.nnson128.product_service.dto.ProductRequestDTO;
 import com.nnson128.product_service.dto.ProductResponseDTO;
 import com.nnson128.product_service.service.ProductService;
@@ -122,6 +125,29 @@ public class ProductController {
         return ResponseEntity.ok(ApiResponse.builder()
                 .success(true)
                 .message("Stock increased successfully")
+                .build());
+    }
+
+    @DeleteMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Object>> deleteProductsInBulk(@RequestBody BulkDeleteRequestDTO request) {
+        long deletedCount = productService.deleteProductsInBulk(request.getIds());
+        return ResponseEntity.ok(ApiResponse.builder()
+                .success(true)
+                .message(deletedCount + " products deleted successfully")
+                .data(deletedCount)
+                .build());
+    }
+
+    @PostMapping("/import")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<BulkImportResponseDTO>> bulkImportProducts(@RequestBody BulkImportProductRequestDTO request) {
+        BulkImportResponseDTO result = productService.bulkImportProducts(request);
+        return ResponseEntity.ok(ApiResponse.<BulkImportResponseDTO>builder()
+                .success(result.getFailCount() == 0)
+                .message(result.getSuccessCount() + " products imported successfully" + 
+                         (result.getFailCount() > 0 ? ", " + result.getFailCount() + " failed" : ""))
+                .data(result)
                 .build());
     }
 

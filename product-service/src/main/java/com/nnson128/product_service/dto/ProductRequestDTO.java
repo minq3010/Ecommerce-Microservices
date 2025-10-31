@@ -18,4 +18,5 @@ public class ProductRequestDTO {
     private String sku;
     private String imageUrl;
     private String categoryId;
+    private String categoryName; // For import from Excel
 }

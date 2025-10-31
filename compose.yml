@@ -40,7 +40,7 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka:29092'
 
   mysql:
-    image: mysql:8.0
+    image: mysql:latest
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD-root}
       MYSQL_USER: user
@@ -54,10 +54,12 @@ services:
       retries: 10
     volumes:
       - ./data/mysql:/var/lib/mysql
-      # - ./shopping.sql:/docker-entrypoint-initdb.d/shopping.sql
+      # chỉ được thực thi khi container mysql khởi động lần đầu
+      - ./backup.sql:/docker-entrypoint-initdb.d/backup.sql
+      
 
   keycloak-mysql:
-    image: mysql:8.0
+    image: mysql:latest
     restart: always
     volumes:
       - ./data/mysql_keycloak_data:/var/lib/mysql
@@ -169,9 +171,10 @@ services:
   #     - "8006:8006"
   #   environment:
   #     SPRING_PROFILES_ACTIVE: docker
-  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ecommerce_payments?createDatabaseIfNotExist=true
+  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/app_db?createDatabaseIfNotExist=true
   #     SPRING_DATASOURCE_USERNAME: root
-  #     SPRING_DATASOURCE_PASSWORD: root123
+  #     SPRING_DATASOURCE_PASSWORD: root
+  #     EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka
   #   depends_on:
   #     - mysql
   #     - discovery-server

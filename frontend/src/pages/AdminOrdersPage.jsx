@@ -3,6 +3,7 @@ import { Table, Button, Modal, Select, message, Space, Tag, Card, Row, Col, Stat
 import { FilterOutlined, ReloadOutlined, EyeOutlined } from '@ant-design/icons';
 import { apiClient } from '../redux/apiClient';
 import AdminLayout from '../layout/AdminLayout';
+import { formatCurrency, formatVND, formatDate, formatDateOnly, shortenId } from '../utils/formatters';
 
 const AdminOrdersPage = () => {
   const [orders, setOrders] = useState([]);
@@ -19,9 +20,23 @@ const AdminOrdersPage = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
+      // Fetch all users first to map userId to user names
+      const usersResponse = await apiClient.get('/users?page=0&size=100');
+      const userMap = {};
+      if (usersResponse.data.success) {
+        const users = usersResponse.data.data.content || usersResponse.data.data || [];
+        users.forEach(user => {
+          userMap[user.id] = {
+            firstname: user.firstname || '',
+            lastname: user.lastname || '',
+            email: user.email
+          };
+        });
+      }
+
       let endpoint;
       if (filterStatus) {
-        endpoint = `/orders/admin/status/${filterStatus}`;
+        endpoint = `/orders/admin/status/${filterStatus}?page=${pagination.page}&size=${pagination.size}`;
       } else {
         endpoint = `/orders/admin/all?page=${pagination.page}&size=${pagination.size}`;
       }
@@ -30,15 +45,26 @@ const AdminOrdersPage = () => {
       
       if (response.data.success) {
         const data = response.data.data;
+        let ordersData = [];
+        
         if (Array.isArray(data)) {
-          setOrders(data);
+          ordersData = data;
         } else if (data.content) {
-          setOrders(data.content);
+          ordersData = data.content;
           setPagination(prev => ({
             ...prev,
             total: data.totalElements
           }));
         }
+
+        // Enrich orders with user name
+        const enrichedOrders = ordersData.map(order => ({
+          ...order,
+          userName: userMap[order.userId] 
+            ? `${userMap[order.userId].firstname} ${userMap[order.userId].lastname}`.trim()
+            : 'Unknown User'
+        }));
+        setOrders(enrichedOrders);
       }
     } catch (error) {
       message.error('Failed to fetch orders');
@@ -90,18 +116,26 @@ const AdminOrdersPage = () => {
       render: (id) => <code style={{ fontSize: 11 }}>{id.substring(0, 12)}...</code>,
     },
     {
-      title: '👤 User ID',
+      title: '👤 User Name',
+      dataIndex: 'userName',
+      key: 'userName',
+      width: 140,
+      ellipsis: true,
+    },
+    {
+      title: '🔑 User ID',
       dataIndex: 'userId',
       key: 'userId',
       width: 100,
       ellipsis: true,
+      render: (id) => <code style={{ fontSize: 10 }}>{id.substring(0, 8)}...</code>,
     },
     {
       title: '💰 Total',
       dataIndex: 'totalPrice',
       key: 'totalPrice',
-      width: 100,
-      render: (price) => <span style={{ fontWeight: 'bold', color: '#52c41a' }}>Đ{price.toFixed(0)}</span>,
+      width: 120,
+      render: (price) => <span style={{ fontWeight: 'bold', color: '#52c41a' }}>{formatVND(price)}</span>,
     },
     {
       title: '📦 Items',
@@ -278,25 +312,34 @@ const AdminOrdersPage = () => {
               <Descriptions.Item label="Order ID">
                 <code>{selectedOrder.id}</code>
               </Descriptions.Item>
+              <Descriptions.Item label="Customer Name">
+                <strong>{selectedOrder.userName}</strong>
+              </Descriptions.Item>
               <Descriptions.Item label="User ID">
-                {selectedOrder.userId}
+                <code style={{ fontSize: 11 }}>{selectedOrder.userId}</code>
               </Descriptions.Item>
               <Descriptions.Item label="Status">
                 <Tag color={getStatusColor(selectedOrder.status)}>{selectedOrder.status}</Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Payment Status">
-                <Tag color={getPaymentStatusColor(selectedOrder.paymentStatus)}>{selectedOrder.paymentStatus}</Tag>
+                {selectedOrder.paymentStatus ? (
+                  <Tag color={getPaymentStatusColor(selectedOrder.paymentStatus)}>
+                    {selectedOrder.paymentStatus}
+                  </Tag>
+                ) : (
+                  <Tag>N/A</Tag>
+                )}
               </Descriptions.Item>
               <Descriptions.Item label="Total Price">
                 <span style={{ fontSize: 16, fontWeight: 'bold', color: '#52c41a' }}>
-                  Đ{selectedOrder.totalPrice.toFixed(0)}
+                  {formatVND(selectedOrder.totalPrice)}
                 </span>
               </Descriptions.Item>
               <Descriptions.Item label="Shipping Cost">
-                Đ{selectedOrder.shippingCost?.toFixed(0) || 0}
+                {formatVND(selectedOrder.shippingCost || 0)}
               </Descriptions.Item>
               <Descriptions.Item label="Tax Amount">
-                Đ{selectedOrder.taxAmount?.toFixed(0) || 0}
+                {formatVND(selectedOrder.taxAmount || 0)}
               </Descriptions.Item>
               <Descriptions.Item label="Number of Items">
                 {selectedOrder.itemCount}

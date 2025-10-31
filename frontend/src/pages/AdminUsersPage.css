@@ -1,0 +1,15 @@
+/* Narrow the selection (checkbox) column so it doesn't consume too much width */
+.users-table .ant-table-selection-column {
+  width: 36px !important;
+  min-width: 36px !important;
+  max-width: 36px !important;
+  padding-inline: 6px !important; /* reduce left/right padding */
+}
+
+/* Center the checkbox nicely */
+.users-table .ant-table-selection-column .ant-checkbox-wrapper,
+.users-table .ant-table-selection-column .ant-checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
