@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { apiClient } from '../redux/apiClient';
 import { clearCart } from '../redux/cartSlice';
+import { formatVND } from '../utils/formatters';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -209,11 +210,11 @@ const CheckoutPage = () => {
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                     <span>{item.productName}</span>
                     <span style={{ fontWeight: 'bold' }}>
-                      ${(Number(item.price || 0) * item.quantity).toFixed(2)}
+                      {formatVND(Number(item.price || 0) * item.quantity)}
                     </span>
                   </div>
                   <div style={{ fontSize: '12px', color: '#999' }}>
-                    {item.quantity} × ${Number(item.price || 0).toFixed(2)}
+                    {item.quantity} × {formatVND(Number(item.price || 0))}
                   </div>
                 </div>
               ))}
@@ -223,17 +224,17 @@ const CheckoutPage = () => {
 
             <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
               <span>Subtotal:</span>
-              <span>${subtotal.toFixed(2)}</span>
+              <span>{formatVND(subtotal)}</span>
             </div>
 
             <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
               <span>Tax (10%):</span>
-              <span>${tax.toFixed(2)}</span>
+              <span>{formatVND(tax)}</span>
             </div>
 
             <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between' }}>
               <span>Shipping:</span>
-              <span>{shipping === 0 ? '🎉 FREE' : `$${shipping.toFixed(2)}`}</span>
+              <span>{shipping === 0 ? '🎉 FREE' : formatVND(shipping)}</span>
             </div>
 
             <Divider />
@@ -246,7 +247,7 @@ const CheckoutPage = () => {
               color: '#ff4d4f',
             }}>
               <span>Total:</span>
-              <span>${total.toFixed(2)}</span>
+              <span>{formatVND(total)}</span>
             </div>
           </Card>
         </Col>

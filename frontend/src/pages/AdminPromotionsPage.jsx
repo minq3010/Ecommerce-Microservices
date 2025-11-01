@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, Input, Select, InputNumber, message, Space, Popconfirm, Card, Row, Col, Statistic, Empty, Tooltip, Spin, Tag, DatePicker, Tabs } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, SearchOutlined, GiftOutlined, CopyOutlined } from '@ant-design/icons';
 import AdminLayout from '../layout/AdminLayout';
+import { apiClient } from '../redux/apiClient';
 import dayjs from 'dayjs';
 
 const AdminPromotionsPage = () => {
@@ -22,86 +23,31 @@ const AdminPromotionsPage = () => {
   const fetchPromotions = async () => {
     setLoading(true);
     try {
-      const mockPromotions = [
-        {
-          id: '1',
-          code: 'SUMMER2024',
-          type: 'PERCENTAGE',
-          discount: 20,
-          description: 'Summer Sale 20% off',
-          startDate: '2024-10-01',
-          endDate: '2024-12-31',
-          usageLimit: 1000,
-          usageCount: 345,
-          minPurchase: 50,
-          maxDiscount: 500,
-          status: 'active',
-          createdAt: '2024-10-01T10:00:00Z'
-        },
-        {
-          id: '2',
-          code: 'WELCOME50',
-          type: 'FIXED',
-          discount: 50,
-          description: 'Welcome discount $50 off on first order',
-          startDate: '2024-01-01',
-          endDate: '2024-12-31',
-          usageLimit: 500,
-          usageCount: 150,
-          minPurchase: 200,
-          maxDiscount: null,
-          status: 'active',
-          createdAt: '2024-01-01T10:00:00Z'
-        },
-        {
-          id: '3',
-          code: 'FLASH10',
-          type: 'PERCENTAGE',
-          discount: 10,
-          description: 'Flash sale 10% off',
-          startDate: '2024-10-15',
-          endDate: '2024-10-30',
-          usageLimit: 2000,
-          usageCount: 1890,
-          minPurchase: 0,
-          maxDiscount: null,
-          status: 'active',
-          createdAt: '2024-10-15T10:00:00Z'
-        },
-        {
-          id: '4',
-          code: 'EXPIRED99',
-          type: 'PERCENTAGE',
-          discount: 25,
-          description: 'Past promotion',
-          startDate: '2024-09-01',
-          endDate: '2024-09-30',
-          usageLimit: 1000,
-          usageCount: 1000,
-          minPurchase: 0,
-          maxDiscount: null,
-          status: 'expired',
-          createdAt: '2024-09-01T10:00:00Z'
-        },
-        {
-          id: '5',
-          code: 'BLACKFRIDAY',
-          type: 'PERCENTAGE',
-          discount: 30,
-          description: 'Black Friday 30% off everything',
-          startDate: '2024-11-29',
-          endDate: '2024-12-02',
-          usageLimit: 5000,
-          usageCount: 0,
-          minPurchase: 100,
-          maxDiscount: 1000,
-          status: 'scheduled',
-          createdAt: '2024-10-30T10:00:00Z'
-        }
-      ];
-      setPromotions(mockPromotions);
+      const response = await apiClient.get('/vouchers');
+      if (response.data.success) {
+        const voucherData = response.data.data || [];
+        const mappedVouchers = voucherData.map(v => ({
+          id: v.id,
+          code: v.code,
+          type: v.discountType,
+          discount: typeof v.discountValue === 'string' ? parseFloat(v.discountValue) : v.discountValue,
+          description: v.description,
+          startDate: v.startDate ? v.startDate.split('T')[0] : '',
+          endDate: v.endDate ? v.endDate.split('T')[0] : '',
+          usageLimit: v.usageLimit || 0,
+          usageCount: v.usageCount || 0,
+          minPurchase: v.minPurchase ? parseFloat(v.minPurchase) : 0,
+          maxDiscount: v.maxDiscount ? parseFloat(v.maxDiscount) : null,
+          status: v.status.toLowerCase(),
+          createdAt: v.createdAt || new Date().toISOString()
+        }));
+        setPromotions(mappedVouchers);
+      } else {
+        message.error('Failed to fetch vouchers');
+      }
     } catch (error) {
-      message.error('Failed to fetch promotions');
+      console.error('Error fetching promotions:', error);
+      message.error('Failed to fetch vouchers');
     } finally {
       setLoading(false);
     }
@@ -109,14 +55,21 @@ const AdminPromotionsPage = () => {
 
   const fetchStats = async () => {
     try {
-      setStats({
-        total: 5,
-        active: 3,
-        used: 2385,
-        totalSavings: 125430
-      });
+      const response = await apiClient.get('/vouchers');
+      if (response.data.success) {
+        const vouchers = response.data.data || [];
+        const active = vouchers.filter(v => v.status.toLowerCase() === 'active').length;
+        const totalUsed = vouchers.reduce((sum, v) => sum + (v.usageCount || 0), 0);
+        
+        setStats({
+          total: vouchers.length,
+          active: active,
+          used: totalUsed,
+          totalSavings: 0 // Will calculate based on usage and discount
+        });
+      }
     } catch (error) {
-      console.error('Failed to fetch stats');
+      console.error('Failed to fetch stats:', error);
     }
   };
 
@@ -137,42 +90,49 @@ const AdminPromotionsPage = () => {
 
   const handleSave = async (values) => {
     try {
+      const voucherData = {
+        code: values.code,
+        description: values.description,
+        discountType: values.type,
+        discountValue: values.discount,
+        minPurchase: values.minPurchase || 0,
+        maxDiscount: values.maxDiscount || null,
+        usageLimit: values.usageLimit || 1000,
+        startDate: values.startDate.format('YYYY-MM-DDTHH:mm:ss'),
+        endDate: values.endDate.format('YYYY-MM-DDTHH:mm:ss'),
+        status: 'ACTIVE'
+      };
+
       if (editingPromo) {
-        const newPromotions = promotions.map(p =>
-          p.id === editingPromo.id ? { ...p, ...values, startDate: values.startDate.format('YYYY-MM-DD'), endDate: values.endDate.format('YYYY-MM-DD') } : p
-        );
-        setPromotions(newPromotions);
-        message.success('Promotion updated successfully!');
+        // Update existing
+        await apiClient.put(`/vouchers/${editingPromo.id}`, voucherData);
+        message.success('Voucher updated successfully!');
       } else {
-        const newPromo = {
-          id: Date.now().toString(),
-          ...values,
-          startDate: values.startDate.format('YYYY-MM-DD'),
-          endDate: values.endDate.format('YYYY-MM-DD'),
-          usageCount: 0,
-          status: 'active',
-          createdAt: new Date().toISOString()
-        };
-        setPromotions([...promotions, newPromo]);
-        message.success('Promotion created successfully!');
+        // Create new
+        await apiClient.post('/vouchers', voucherData);
+        message.success('Voucher created successfully!');
       }
+      
       setModalVisible(false);
       form.resetFields();
       setEditingPromo(null);
+      fetchPromotions();
       fetchStats();
     } catch (error) {
-      message.error(error.message || 'Failed to save promotion');
+      message.error(error.message || 'Failed to save voucher');
+      console.error('Error saving voucher:', error);
     }
   };
 
   const handleDelete = async (promoId) => {
     try {
-      const newPromotions = promotions.filter(p => p.id !== promoId);
-      setPromotions(newPromotions);
-      message.success('Promotion deleted successfully!');
+      await apiClient.delete(`/vouchers/${promoId}`);
+      message.success('Voucher deleted successfully!');
+      fetchPromotions();
       fetchStats();
     } catch (error) {
-      message.error('Failed to delete promotion');
+      message.error('Failed to delete voucher');
+      console.error('Error deleting voucher:', error);
     }
   };
 
@@ -335,7 +295,7 @@ const AdminPromotionsPage = () => {
         <div style={{ marginBottom: '24px' }}>
           <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#333', marginBottom: '8px' }}>
             <GiftOutlined style={{ marginRight: '12px', color: '#667eea' }} />
-            Promotions & Coupons
+            Voucher Management
           </h1>
           <p style={{ color: '#666', fontSize: '14px' }}>
             Create and manage discount codes, promotional campaigns, and special offers

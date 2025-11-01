@@ -3,6 +3,7 @@ package com.nnson128.cart_service.controller;
 import com.nnson128.cart_service.dto.ApiResponse;
 import com.nnson128.cart_service.dto.CartDTO;
 import com.nnson128.cart_service.dto.CartItemDTO;
+import com.nnson128.cart_service.dto.AddCartItemRequest;
 import com.nnson128.cart_service.service.CartService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,9 +34,9 @@ public class CartController {
     @PostMapping("/items")
     public ResponseEntity<ApiResponse<CartDTO>> addItemToCart(
             Authentication authentication,
-            @RequestBody CartItemDTO itemDTO) {
+            @RequestBody AddCartItemRequest request) {
         String userId = authentication.getName();
-        CartDTO cart = cartService.addItemToCart(userId, itemDTO);
+        CartDTO cart = cartService.addItemToCart(userId, request);
         return ResponseEntity.ok(ApiResponse.<CartDTO>builder()
                 .success(true)
                 .message("Item added to cart successfully")

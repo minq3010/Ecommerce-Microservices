@@ -3,6 +3,7 @@ import { Table, Button, Modal, message, Space, Tag, Card, Row, Col, Statistic, E
 import { DeleteOutlined, EyeOutlined, ReloadOutlined, ClearOutlined } from '@ant-design/icons';
 import { apiClient } from '../redux/apiClient';
 import AdminLayout from '../layout/AdminLayout';
+import { formatVND } from '../utils/formatters';
 
 const AdminCartsPage = () => {
   const [carts, setCarts] = useState([]);
@@ -29,13 +30,29 @@ const AdminCartsPage = () => {
         // Fetch carts for each user using admin endpoint
         const cartPromises = users.map(user =>
           apiClient.get(`/carts/admin/${user.id}`)
-            .then(res => ({
-              userId: user.id,
-              userName: `${user.firstname || ''} ${user.lastname || ''}`,
-              userEmail: user.email,
-              ...res.data.data,
-              key: user.id
-            }))
+            .then(res => {
+              const apiData = res.data.data || {};
+              const totalPrice = typeof apiData.totalPrice === 'string' 
+                ? parseFloat(apiData.totalPrice) 
+                : apiData.totalPrice;
+              
+              // Process items to ensure numeric types
+              const processedItems = (apiData.items || []).map(item => ({
+                ...item,
+                price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
+                subtotal: typeof item.subtotal === 'string' ? parseFloat(item.subtotal) : item.subtotal,
+              }));
+              
+              return {
+                userId: apiData.userId || user.id,
+                userName: `${user.firstname || ''} ${user.lastname || ''}`,
+                userEmail: user.email,
+                items: processedItems,
+                totalPrice: totalPrice || 0,
+                totalItems: apiData.totalItems || processedItems.length || 0,
+                key: user.id
+              };
+            })
             .catch(() => ({
               userId: user.id,
               userName: `${user.firstname || ''} ${user.lastname || ''}`,
@@ -53,6 +70,7 @@ const AdminCartsPage = () => {
       }
     } catch (error) {
       message.error('Failed to fetch carts');
+      console.error('Error fetching carts:', error);
     } finally {
       setLoading(false);
     }
@@ -67,9 +85,56 @@ const AdminCartsPage = () => {
     try {
       await apiClient.delete(`/carts/admin/${userId}/items/${productId}`);
       message.success('Item removed successfully');
-      fetchAllCarts();
+      
+      // Fetch updated cart data
+      const updatedResponse = await apiClient.get(`/carts/admin/${userId}`);
+      console.log('Updated cart response:', updatedResponse.data);
+      
+      if (updatedResponse.data.success && updatedResponse.data.data) {
+        const apiData = updatedResponse.data.data;
+        
+        // Find the current cart to preserve userName and userEmail
+        const currentCart = carts.find(c => c.userId === userId);
+        
+        // Convert BigDecimal strings to numbers if needed
+        const totalPrice = typeof apiData.totalPrice === 'string' 
+          ? parseFloat(apiData.totalPrice) 
+          : apiData.totalPrice;
+        
+        // Process items to ensure numeric types
+        const processedItems = (apiData.items || []).map(item => ({
+          ...item,
+          price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
+          subtotal: typeof item.subtotal === 'string' ? parseFloat(item.subtotal) : item.subtotal,
+        }));
+        
+        const updatedCartData = {
+          userId: apiData.userId || userId,
+          userName: currentCart?.userName || selectedCart?.userName || '',
+          userEmail: currentCart?.userEmail || selectedCart?.userEmail || '',
+          items: processedItems,
+          totalPrice: totalPrice || 0,
+          totalItems: apiData.totalItems || processedItems.length || 0,
+          key: userId
+        };
+        
+        console.log('Processed cart data:', updatedCartData);
+        
+        // Update carts list in table first
+        setCarts(prevCarts =>
+          prevCarts.map(cart =>
+            cart.userId === userId ? updatedCartData : cart
+          )
+        );
+        
+        // Update drawer detail if the removed item is from the currently viewed cart
+        if (selectedCart && selectedCart.userId === userId) {
+          setSelectedCart(updatedCartData);
+        }
+      }
     } catch (error) {
       message.error('Failed to remove item');
+      console.error('Error removing item:', error);
     }
   };
 
@@ -78,6 +143,11 @@ const AdminCartsPage = () => {
       await apiClient.delete(`/carts/admin/${userId}`);
       message.success('Cart cleared successfully');
       fetchAllCarts();
+      // Close drawer if it's the cart being cleared
+      if (selectedCart && selectedCart.userId === userId) {
+        setDrawerVisible(false);
+        setSelectedCart(null);
+      }
     } catch (error) {
       message.error('Failed to clear cart');
     }
@@ -90,11 +160,55 @@ const AdminCartsPage = () => {
         `/carts/admin/${selectedCart.userId}/items/${editingItem.productId}?quantity=${editQuantity}`
       );
       message.success('Item quantity updated successfully');
-      fetchAllCarts();
+      
+      // Fetch updated cart data
+      const updatedResponse = await apiClient.get(`/carts/admin/${selectedCart.userId}`);
+      console.log('Updated cart response:', updatedResponse.data);
+      
+      if (updatedResponse.data.success && updatedResponse.data.data) {
+        const apiData = updatedResponse.data.data;
+        const currentCart = carts.find(c => c.userId === selectedCart.userId);
+        
+        // Convert BigDecimal strings to numbers if needed
+        const totalPrice = typeof apiData.totalPrice === 'string' 
+          ? parseFloat(apiData.totalPrice) 
+          : apiData.totalPrice;
+        
+        // Process items to ensure numeric types
+        const processedItems = (apiData.items || []).map(item => ({
+          ...item,
+          price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
+          subtotal: typeof item.subtotal === 'string' ? parseFloat(item.subtotal) : item.subtotal,
+        }));
+        
+        const updatedCartData = {
+          userId: apiData.userId || selectedCart.userId,
+          userName: currentCart?.userName || selectedCart.userName || '',
+          userEmail: currentCart?.userEmail || selectedCart.userEmail || '',
+          items: processedItems,
+          totalPrice: totalPrice || 0,
+          totalItems: apiData.totalItems || processedItems.length || 0,
+          key: selectedCart.userId
+        };
+        
+        console.log('Processed cart data:', updatedCartData);
+        
+        // Update carts list in table first
+        setCarts(prevCarts =>
+          prevCarts.map(cart =>
+            cart.userId === selectedCart.userId ? updatedCartData : cart
+          )
+        );
+        
+        // Update drawer detail
+        setSelectedCart(updatedCartData);
+      }
+      
       setModalVisible(false);
       setEditingItem(null);
     } catch (error) {
       message.error('Failed to update quantity');
+      console.error('Error updating quantity:', error);
     }
   };
 
@@ -121,7 +235,10 @@ const AdminCartsPage = () => {
       dataIndex: 'price',
       key: 'price',
       width: 100,
-      render: (price) => <strong>${price?.toFixed(2)}</strong>,
+      render: (price) => {
+        const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+        return <strong>{formatVND(numPrice)}</strong>;
+      },
     },
     {
       title: '📊 Quantity',
@@ -134,51 +251,17 @@ const AdminCartsPage = () => {
       title: '💰 Subtotal',
       key: 'subtotal',
       width: 100,
-      render: (_, record) => (
-        <strong>${(record.price * record.quantity)?.toFixed(2)}</strong>
-      ),
-    },
-    {
-      title: '⚙️ Actions',
-      key: 'actions',
-      width: 120,
-      render: (_, record) => (
-        <Space size="small">
-          <Button
-            type="primary"
-            size="small"
-            onClick={() => {
-              setEditingItem(record);
-              setEditQuantity(record.quantity);
-              setModalVisible(true);
-            }}
-          >
-            Edit
-          </Button>
-          <Popconfirm
-            title="Remove Item"
-            description="Are you sure you want to remove this item?"
-            onConfirm={() => handleRemoveItem(selectedCart.userId, record.productId)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Button danger size="small" icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
-      ),
+      render: (_, record) => {
+        const numPrice = typeof record.price === 'string' ? parseFloat(record.price) : record.price;
+        const subtotal = numPrice * record.quantity;
+        return <strong>{formatVND(subtotal)}</strong>;
+      },
     },
   ];
 
   const columns = [
     {
-      title: '👤 User Name',
-      dataIndex: 'userName',
-      key: 'userName',
-      width: 150,
-      sorter: (a, b) => a.userName.localeCompare(b.userName),
-    },
-    {
-      title: '📧 Email',
+      title: ' Email',
       dataIndex: 'userEmail',
       key: 'userEmail',
       width: 200,
@@ -197,7 +280,7 @@ const AdminCartsPage = () => {
       dataIndex: 'totalPrice',
       key: 'totalPrice',
       width: 120,
-      render: (price) => <strong className="text-success">${price?.toFixed(2)}</strong>,
+      render: (price) => <strong className="text-success">{formatVND(price)}</strong>,
       sorter: (a, b) => a.totalPrice - b.totalPrice,
     },
     {
@@ -266,7 +349,8 @@ const AdminCartsPage = () => {
             <Card>
               <Statistic
                 title="💰 Total Value"
-                value={`$${carts.reduce((sum, c) => sum + (c.totalPrice || 0), 0).toFixed(2)}`}
+                value={carts.reduce((sum, c) => sum + (c.totalPrice || 0), 0)}
+                formatter={(value) => formatVND(value)}
                 valueStyle={{ color: '#faad14' }}
               />
             </Card>
@@ -301,6 +385,7 @@ const AdminCartsPage = () => {
             <Empty description="No active carts found" />
           ) : (
             <Table
+              key={JSON.stringify(carts.map(c => c.userId))}
               columns={columns}
               dataSource={carts}
               loading={loading}
@@ -314,7 +399,8 @@ const AdminCartsPage = () => {
 
       {/* Cart Details Drawer */}
       <Drawer
-        title={`Cart Details - ${selectedCart?.userName}`}
+        key={selectedCart?.userId}
+        title={`Cart Details - ${selectedCart?.userEmail || selectedCart?.userId}`}
         placement="right"
         onClose={() => setDrawerVisible(false)}
         open={drawerVisible}
@@ -325,13 +411,12 @@ const AdminCartsPage = () => {
             {/* User Info */}
             <Descriptions column={1} bordered style={{ marginBottom: '20px' }}>
               <Descriptions.Item label="User ID">{selectedCart.userId}</Descriptions.Item>
-              <Descriptions.Item label="User Name">{selectedCart.userName}</Descriptions.Item>
               <Descriptions.Item label="Email">{selectedCart.userEmail}</Descriptions.Item>
               <Descriptions.Item label="Total Items">
                 <Tag color="processing">{selectedCart.totalItems || selectedCart.items?.length || 0}</Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Total Price">
-                <strong className="text-success">${selectedCart.totalPrice?.toFixed(2)}</strong>
+                <strong className="text-success">{formatVND(selectedCart.totalPrice)}</strong>
               </Descriptions.Item>
             </Descriptions>
 
@@ -339,6 +424,7 @@ const AdminCartsPage = () => {
             <h3>📦 Cart Items</h3>
             {selectedCart.items && selectedCart.items.length > 0 ? (
               <Table
+                key={`items-${selectedCart.items.length}`}
                 columns={itemColumns}
                 dataSource={selectedCart.items.map((item, idx) => ({ ...item, key: idx }))}
                 pagination={false}
@@ -361,7 +447,8 @@ const AdminCartsPage = () => {
                 <Col span={12}>
                   <Statistic
                     title="Total Price"
-                    value={`$${selectedCart.totalPrice?.toFixed(2)}`}
+                    value={selectedCart.totalPrice}
+                    formatter={(value) => formatVND(value)}
                     valueStyle={{ color: '#52c41a' }}
                   />
                 </Col>
@@ -384,7 +471,7 @@ const AdminCartsPage = () => {
         <div style={{ marginBottom: '20px' }}>
           <strong>Product:</strong> {editingItem?.productName}
           <br />
-          <strong>Price:</strong> ${editingItem?.price?.toFixed(2)}
+          <strong>Price:</strong> {formatVND(editingItem?.price)}
         </div>
         <div>
           <label>Quantity:</label>
@@ -395,7 +482,7 @@ const AdminCartsPage = () => {
             style={{ width: '100%', marginTop: '10px' }}
           />
           <div style={{ marginTop: '10px', color: '#999' }}>
-            Subtotal: ${(editQuantity * (editingItem?.price || 0))?.toFixed(2)}
+            Subtotal: {formatVND(editQuantity * (editingItem?.price || 0))}
           </div>
         </div>
       </Modal>

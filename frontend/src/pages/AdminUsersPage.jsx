@@ -45,9 +45,8 @@ const AdminUsersPage = () => {
   const [searchText, setSearchText] = useState("");
   const [stats, setStats] = useState({
     total: 0,
-    active: 0,
     admin: 0,
-    users: 0,
+    regular: 0,
   });
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [deletingBulk, setDeletingBulk] = useState(false);
@@ -66,6 +65,14 @@ const AdminUsersPage = () => {
         const usersList = Array.isArray(data) ? data : [];
         setUsers(usersList);
         updateStats(usersList);
+        // Ensure selectedRowKeys does not contain ADMIN users (clear any invalid selections)
+        setSelectedRowKeys((prev) =>
+          prev.filter((key) => {
+            const u = usersList.find((x) => x.id === key);
+            if (!u) return false;
+            return !u.roles?.some((r) => r.name === "ADMIN");
+          })
+        );
       }
     } catch (error) {
       if (error.response?.status === 403) {
@@ -82,22 +89,27 @@ const AdminUsersPage = () => {
   };
 
   const updateStats = (usersList) => {
-    const adminCount = usersList.filter((u) =>
-      u.roles?.some((r) => r.name === "ADMIN")
-    ).length;
+    // Count users by role from DB (role field, not Keycloak roles)
+    const adminCount = usersList.filter((u) => u.role === "ADMIN").length;
+    const staffCount = usersList.filter((u) => u.role === "STAFF").length;
+    const userCount = usersList.filter((u) => u.role === "USER").length;
+    const regularUsersCount = staffCount + userCount; // Staff + Users
+    
     setStats({
       total: usersList.length,
-      active: usersList.filter((u) => u.enabled).length,
       admin: adminCount,
-      users: usersList.filter((u) => !u.roles?.some((r) => r.name === "ADMIN"))
-        .length,
+      regular: regularUsersCount,
     });
   };
 
   const handleShowModal = (user = null) => {
     if (user) {
       setEditingUser(user);
-      form.setFieldsValue(user);
+      // Map user data to form, handling both 'role' (from DB) and 'roles' (from Keycloak) fields
+      form.setFieldsValue({
+        ...user,
+        role: user.role || "USER", // Use role from DB, default to USER
+      });
     } else {
       setEditingUser(null);
       form.resetFields();
@@ -108,8 +120,25 @@ const AdminUsersPage = () => {
   const handleSave = async (values) => {
     try {
       if (editingUser) {
-        await apiClient.put(`/users/${editingUser.id}`, values);
+        // Edit existing user - only update firstname, lastname, role (not email or password)
+        await apiClient.put(`/users/${editingUser.id}`, {
+          firstName: values.firstName,
+          lastName: values.lastName,
+          role: values.role,
+        });
         message.success("User updated successfully!");
+      } else {
+        // Create new user via auth/register endpoint
+        await apiClient.post("/auth/register", {
+          username: values.username,
+          firstname: values.firstName,
+          lastname: values.lastName,
+          email: values.email,
+          password: values.password,
+          phone: values.phone,
+          role: values.role,
+        });
+        message.success("User created successfully!");
       }
       setModalVisible(false);
       form.resetFields();
@@ -179,6 +208,18 @@ const AdminUsersPage = () => {
       user.lastName.toLowerCase().includes(searchText.toLowerCase())
   );
 
+  // Helper to determine if a roles array contains ADMIN.
+  // Supports roles as strings (['USER', 'ADMIN']) or objects ([{name: 'ADMIN'}]).
+  const rolesContainAdmin = (roles) => {
+    if (!roles || !Array.isArray(roles)) return false;
+    return roles.some((r) => {
+      if (!r) return false;
+      if (typeof r === "string") return r === "ADMIN";
+      if (typeof r === "object") return r.name === "ADMIN" || r === "ADMIN";
+      return false;
+    });
+  };
+
   const columns = [
     {
       title: "👤 User",
@@ -210,42 +251,31 @@ const AdminUsersPage = () => {
     },
     {
       title: "🔐 Role",
-      dataIndex: "roles",
-      key: "roles",
+      dataIndex: "role",
+      key: "role",
       width: "15%",
-      render: (roles) => {
-        const highestRole = getHighestRole(roles);
+      render: (role) => {
+        // role is a simple string (ADMIN, STAFF, USER) from DB
         return (
-          <Tag color={getRoleColor(highestRole)}>
-            {getRoleLabel(highestRole)}
+          <Tag color={getRoleColor(role)}>
+            {getRoleLabel(role)}
           </Tag>
         );
       },
       sorter: (a, b) => {
-        const roleA = getHighestRole(a.roles);
-        const roleB = getHighestRole(b.roles);
+        const roleA = a.role || "USER";
+        const roleB = b.role || "USER";
         return roleA.localeCompare(roleB);
       },
     },
-    {
-      title: "✓ Status",
-      dataIndex: "enabled",
-      key: "enabled",
-      width: "12%",
-      render: (enabled) => (
-        <Tag color={enabled ? "green" : "red"}>
-          {enabled ? "Active" : "Inactive"}
-        </Tag>
-      ),
-      sorter: (a, b) => (a.enabled ? 1 : -1) - (b.enabled ? 1 : -1),
-    },
+    // Status column removed as requested
     {
       title: "⚙️ Actions",
       key: "action",
       width: "15%",
       align: "center",
       render: (_, record) => {
-        const isAdmin = record.roles?.some((r) => r.name === "ADMIN");
+  const isAdmin = rolesContainAdmin(record.roles);
         return (
           <Space size="small">
             <Tooltip title="Edit">
@@ -256,28 +286,20 @@ const AdminUsersPage = () => {
                 onClick={() => handleShowModal(record)}
               />
             </Tooltip>
-            <Popconfirm
-              title="Delete User"
-              description={
-                isAdmin
-                  ? "Admin users cannot be deleted"
-                  : "Are you sure to delete this user?"
-              }
-              onConfirm={() => handleDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
-              okButtonProps={{ danger: true }}
-              disabled={isAdmin}
-            >
-              <Tooltip title={isAdmin ? "Cannot delete admin users" : "Delete"}>
-                <Button
-                  danger
-                  size="small"
-                  icon={<DeleteOutlined />}
-                  disabled={isAdmin}
-                />
-              </Tooltip>
-            </Popconfirm>
+                {!isAdmin ? (
+                  <Popconfirm
+                    title="Delete User"
+                    description={"Are you sure to delete this user?"}
+                    onConfirm={() => handleDelete(record.id)}
+                    okText="Yes"
+                    cancelText="No"
+                    okButtonProps={{ danger: true }}
+                  >
+                    <Tooltip title="Delete">
+                      <Button danger size="small" icon={<DeleteOutlined />} />
+                    </Tooltip>
+                  </Popconfirm>
+                ) : null}
           </Space>
         );
       },
@@ -309,7 +331,7 @@ const AdminUsersPage = () => {
 
         {/* Statistics */}
         <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
-          <Col xs={24} sm={12} lg={6}>
+          <Col xs={24} sm={12} lg={8}>
             <Card style={{ boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.03)" }}>
               <Statistic
                 title="Total Users"
@@ -323,21 +345,7 @@ const AdminUsersPage = () => {
               />
             </Card>
           </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card style={{ boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.03)" }}>
-              <Statistic
-                title="Active Users"
-                value={stats.active}
-                suffix={`of ${stats.total}`}
-                valueStyle={{
-                  color: "#52c41a",
-                  fontSize: "28px",
-                  fontWeight: "bold",
-                }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
+          <Col xs={24} sm={12} lg={8}>
             <Card style={{ boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.03)" }}>
               <Statistic
                 title="Administrators"
@@ -351,14 +359,14 @@ const AdminUsersPage = () => {
               />
             </Card>
           </Col>
-          <Col xs={24} sm={12} lg={6}>
+          <Col xs={24} sm={12} lg={8}>
             <Card style={{ boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.03)" }}>
               <Statistic
                 title="Regular Users"
-                value={stats.users}
+                value={stats.regular}
                 suffix={`(${
                   stats.total > 0
-                    ? ((stats.users / stats.total) * 100).toFixed(0)
+                    ? ((stats.regular / stats.total) * 100).toFixed(0)
                     : 0
                 }%)`}
                 valueStyle={{
@@ -457,30 +465,34 @@ const AdminUsersPage = () => {
                 columns={columns}
                 dataSource={filteredUsers}
                 rowKey="id"
-                rowSelection={{
-                  columnWidth: 36,
-                  selectedRowKeys,
-                  onChange: (keys) => {
-                    // Only allow selecting non-admin users
-                    const validKeys = keys.filter((key) => {
-                      const user = filteredUsers.find((u) => u.id === key);
-                      if (!user) return false;
-                      const isAdmin = user.roles?.some(
-                        (r) => r.name === "ADMIN"
-                      );
-                      return !isAdmin;
-                    });
-                    setSelectedRowKeys(validKeys);
-                  },
-                  getCheckboxProps: (record) => {
-                    const isAdmin = record.roles?.some(
-                      (r) => r.name === "ADMIN"
-                    );
-                    return {
-                      disabled: isAdmin,
-                    };
-                  },
-                }}
+                rowSelection={
+                  filteredUsers.some((u) => !rolesContainAdmin(u.roles))
+                    ? {
+                        columnWidth: 36,
+                        selectedRowKeys,
+                        onChange: (keys) => {
+                          // Only allow selecting non-admin users
+                          const validKeys = keys.filter((key) => {
+                            const user = filteredUsers.find((u) => u.id === key);
+                            if (!user) return false;
+                            console.log("User: ", user);
+                            
+                            const isAdmin = rolesContainAdmin(user.roles);
+                            return !isAdmin;
+                          });
+                          setSelectedRowKeys(validKeys);
+                        },
+                        getCheckboxProps: (record) => {
+                          const isAdmin = rolesContainAdmin(record.roles);
+                          return {
+                            // disable selection for admins and hide the checkbox visually
+                            disabled: isAdmin,
+                            style: isAdmin ? { display: "none" } : {},
+                          };
+                        },
+                      }
+                    : undefined
+                }
                 pagination={{
                   pageSize: 10,
                   showSizeChanger: true,
@@ -499,28 +511,29 @@ const AdminUsersPage = () => {
             )}
           </Spin>
         </Card>
-      </div>
 
-      {/* Modal */}
-      <Modal
-        title={editingUser ? "Edit User" : "Add New User"}
-        open={modalVisible}
-        onCancel={() => {
-          setModalVisible(false);
-          form.resetFields();
-          setEditingUser(null);
-        }}
-        onOk={() => form.submit()}
-        width={600}
-        okText={editingUser ? "Update" : "Create"}
-        cancelText="Cancel"
-      >
+  </div>
+
+  {/* Modal */}
+        <Modal
+          title={editingUser ? "Edit User" : "Add New User"}
+          open={modalVisible}
+          onCancel={() => {
+            setModalVisible(false);
+            form.resetFields();
+            setEditingUser(null);
+          }}
+          onOk={() => form.submit()}
+          width={600}
+          okText={editingUser ? "Update" : "Create"}
+          cancelText="Cancel"
+        >
         <Form form={form} layout="vertical" onFinish={handleSave}>
           <Form.Item
             label="Username"
             name="username"
             rules={[
-              { required: true, message: "Please enter username" },
+              { required: !editingUser, message: "Please enter username" },
               { min: 3, message: "Username must be at least 3 characters" },
             ]}
           >
@@ -539,8 +552,44 @@ const AdminUsersPage = () => {
               { type: "email", message: "Invalid email format" },
             ]}
           >
-            <Input type="email" placeholder="user@example.com" size="large" />
+            <Input 
+              type="email" 
+              placeholder="user@example.com" 
+              size="large"
+              disabled={!!editingUser}
+            />
           </Form.Item>
+
+          {!editingUser && (
+            <Form.Item
+              label="Password"
+              name="password"
+              rules={[
+                { required: true, message: "Please enter password" },
+                { min: 6, message: "Password must be at least 6 characters" },
+              ]}
+            >
+              <Input.Password 
+                placeholder="Enter password" 
+                size="large"
+              />
+            </Form.Item>
+          )}
+
+          {!editingUser && (
+            <Form.Item
+              label="Phone"
+              name="phone"
+              rules={[
+                { required: true, message: "Please enter phone number" },
+              ]}
+            >
+              <Input 
+                placeholder="+84xxxxxxxxx" 
+                size="large"
+              />
+            </Form.Item>
+          )}
 
           <Row gutter={16}>
             <Col span={12}>

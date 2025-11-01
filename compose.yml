@@ -1,7 +1,6 @@
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.3.0
-    container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -10,7 +9,6 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.3.0
-    container_name: kafka
     depends_on:
       - zookeeper
     ports:
@@ -29,7 +27,6 @@ services:
   # === THÊM DỊCH VỤ MỚI ===
   schema-registry:
     image: confluentinc/cp-schema-registry:7.3.0
-    container_name: schema-registry
     depends_on:
       - kafka
     ports:
@@ -97,7 +94,6 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: redis
     ports:
       - "6379:6379"
     command: redis-server --appendonly yes

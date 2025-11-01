@@ -10,4 +10,6 @@ public class UserRegistrationRequest {
     private String email;
     private String password;
     private String phone;
+    // Optional role: ADMIN, STAFF, USER
+    private String role;
 }

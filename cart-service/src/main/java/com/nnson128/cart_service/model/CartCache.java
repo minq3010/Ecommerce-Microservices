@@ -1,9 +1,10 @@
-package com.nnson128.cart_service.entity;
+package com.nnson128.cart_service.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;
 
@@ -16,10 +17,14 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Cart implements Serializable {
-    private String id; // userId
-    private List<CartItem> items;
+public class CartCache implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    private String userId;
+    private List<CartItemCache> items;
     private BigDecimal totalPrice;
+    private Integer totalItems;
     
     @TimeToLive
     private Long ttl;

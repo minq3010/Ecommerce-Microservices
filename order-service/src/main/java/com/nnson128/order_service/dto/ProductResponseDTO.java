@@ -1,4 +1,4 @@
-package com.nnson128.cart_service.dto;
+package com.nnson128.order_service.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,11 +11,10 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CartItemDTO {
-    private String productId;
-    private String productName;
+public class ProductResponseDTO {
+    private String id;
+    private String name;
     private BigDecimal price;
-    private Integer quantity;
     private String imageUrl;
-    private BigDecimal subtotal;
+    private String status;
 }

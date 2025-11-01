@@ -25,6 +25,10 @@ spring:
           issuer-uri: http://keycloak:8080/realms/app-realms
           jwk-set-uri: http://keycloak:8080/realms/app-realms/protocol/openid-connect/certs
 
+order:
+  service:
+    url: http://localhost:9003
+
 eureka:
   client:
     serviceUrl:

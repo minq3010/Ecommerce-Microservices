@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Card, Row, Col, Statistic, Button, Space, Tag, Empty, Drawer, Descriptions, message, Spin, Modal } from 'antd';
 import { ReloadOutlined, EyeOutlined, UndoOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { apiClient } from '../redux/apiClient';
+import { formatVND } from '../utils/formatters';
 
 const PaymentHistory = () => {
   const [payments, setPayments] = useState([]);
@@ -135,7 +136,7 @@ const PaymentHistory = () => {
       dataIndex: 'amount',
       key: 'amount',
       width: 100,
-      render: (amount) => <strong>${amount?.toFixed(2)}</strong>,
+      render: (amount) => <strong>{formatVND(amount)}</strong>,
       sorter: (a, b) => a.amount - b.amount,
     },
     {
@@ -242,7 +243,8 @@ const PaymentHistory = () => {
           <Card>
             <Statistic
               title="💰 Total Paid"
-              value={`$${statistics.totalAmount?.toFixed(2)}`}
+              value={statistics.totalAmount}
+              formatter={(value) => formatVND(value)}
               valueStyle={{ color: '#faad14' }}
             />
           </Card>
@@ -303,7 +305,7 @@ const PaymentHistory = () => {
                 {selectedPayment.orderId}
               </Descriptions.Item>
               <Descriptions.Item label="Amount">
-                <strong className="text-success">${selectedPayment.amount?.toFixed(2)}</strong>
+                <strong className="text-success">{formatVND(selectedPayment.amount)}</strong>
               </Descriptions.Item>
               <Descriptions.Item label="Payment Method">
                 <Tag color="blue">{selectedPayment.paymentMethod}</Tag>

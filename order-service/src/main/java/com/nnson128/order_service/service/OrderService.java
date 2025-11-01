@@ -1,8 +1,11 @@
 package com.nnson128.order_service.service;
 
+import com.nnson128.order_service.client.ProductClient;
 import com.nnson128.order_service.dto.CreateOrderRequestDTO;
+import com.nnson128.order_service.dto.CreateOrderItemRequest;
 import com.nnson128.order_service.dto.OrderItemDTO;
 import com.nnson128.order_service.dto.OrderResponseDTO;
+import com.nnson128.order_service.dto.ProductResponseDTO;
 import com.nnson128.order_service.entity.Order;
 import com.nnson128.order_service.entity.OrderItem;
 import com.nnson128.order_service.repository.OrderItemRepository;
@@ -16,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +31,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    private final ProductClient productClient;
 
     // Create order
     public OrderResponseDTO createOrder(String userId, CreateOrderRequestDTO request) {
@@ -34,20 +39,29 @@ public class OrderService {
             throw new RuntimeException("Order must contain at least one item");
         }
 
+        // Validate and fetch all products first
+        List<ProductResponseDTO> products = new ArrayList<>();
+        for (CreateOrderItemRequest itemRequest : request.getItems()) {
+            try {
+                ProductResponseDTO product = productClient.getProductById(itemRequest.getProductId());
+                if (product == null) {
+                    log.error("Product not found: {}", itemRequest.getProductId());
+                    throw new RuntimeException("Product not found: " + itemRequest.getProductId());
+                }
+                products.add(product);
+            } catch (Exception e) {
+                log.error("Failed to fetch product details for productId: {}", itemRequest.getProductId(), e);
+                throw new RuntimeException("Failed to fetch product details for productId: " + itemRequest.getProductId(), e);
+            }
+        }
+
         // Calculate total price
-        BigDecimal totalPrice = request.getItems().stream()
-                .map(OrderItemDTO::getSubtotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        totalPrice = totalPrice
-                .add(request.getShippingCost() != null ? request.getShippingCost() : BigDecimal.ZERO)
-                .add(request.getTaxAmount() != null ? request.getTaxAmount() : BigDecimal.ZERO);
-
+        BigDecimal calculatedTotal = BigDecimal.ZERO;
         Order order = Order.builder()
                 .userId(userId)
-                .totalPrice(totalPrice)
-                .shippingCost(request.getShippingCost() != null ? request.getShippingCost() : BigDecimal.ZERO)
-                .taxAmount(request.getTaxAmount() != null ? request.getTaxAmount() : BigDecimal.ZERO)
+                .totalPrice(calculatedTotal)
+                .shippingCost(BigDecimal.ZERO)
+                .taxAmount(BigDecimal.ZERO)
                 .status("PENDING")
                 .shippingAddress(request.getShippingAddress())
                 .phoneNumber(request.getPhoneNumber())
@@ -58,18 +72,29 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(order);
 
-        // Create order items
-        for (OrderItemDTO itemDTO : request.getItems()) {
+        // Create order items and calculate total price
+        calculatedTotal = BigDecimal.ZERO;
+        for (int i = 0; i < request.getItems().size(); i++) {
+            CreateOrderItemRequest itemRequest = request.getItems().get(i);
+            ProductResponseDTO product = products.get(i);
+
+            BigDecimal subtotal = product.getPrice().multiply(new BigDecimal(itemRequest.getQuantity()));
+            calculatedTotal = calculatedTotal.add(subtotal);
+
             OrderItem orderItem = OrderItem.builder()
                     .order(savedOrder)
-                    .productId(itemDTO.getProductId())
-                    .productName(itemDTO.getProductName())
-                    .price(itemDTO.getPrice())
-                    .quantity(itemDTO.getQuantity())
-                    .subtotal(itemDTO.getSubtotal())
+                    .productId(product.getId())
+                    .productName(product.getName())
+                    .price(product.getPrice())
+                    .quantity(itemRequest.getQuantity())
+                    .subtotal(subtotal)
                     .build();
             orderItemRepository.save(orderItem);
         }
+
+        // Update order total price
+        savedOrder.setTotalPrice(calculatedTotal);
+        orderRepository.save(savedOrder);
 
         log.info("Order created with ID: {}", savedOrder.getId());
         return mapToDTO(savedOrder);

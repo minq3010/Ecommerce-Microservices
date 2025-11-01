@@ -99,7 +99,7 @@ public class AuthService {
             throw new CommonException("Phone " + normalizedPhone + " is already in use.", HttpStatus.BAD_REQUEST);
         });
 
-        String token = identityClient.getClientToken(TokenExchangeParam.builder()
+    String token = identityClient.getClientToken(TokenExchangeParam.builder()
                 .grant_type("client_credentials")
                 .client_id(clientId)
                 .client_secret(clientSecret)
@@ -124,10 +124,48 @@ public class AuthService {
                                 .build()))
                         .build());
 
-//        get userid from keycloak response
+        // get userid from keycloak response
         UUID userId = extractUserId(creationResponse);
 
-        // 4. Create user in local database
+        // If role provided map to group name in Keycloak
+        String requestedRole = request.getRole() != null ? request.getRole().toUpperCase() : "USER";
+        String groupName;
+        switch (requestedRole) {
+            case "ADMIN":
+                groupName = "admin group";
+                break;
+            case "STAFF":
+                groupName = "staff group";
+                break;
+            default:
+                groupName = "default groups";
+        }
+
+        try {
+            // search groups by name
+            ResponseEntity<?> groupsResp = identityClient.searchGroups("Bearer " + token, groupName);
+            if (groupsResp.getStatusCode().is2xxSuccessful() && groupsResp.getBody() instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> groups = (List<Map<String, Object>>) groupsResp.getBody();
+                if (!groups.isEmpty()) {
+                    Map<String, Object> grp = groups.get(0);
+                    String groupId = (String) grp.get("id");
+                    try {
+                        identityClient.addUserToGroup("Bearer " + token, userId.toString(), groupId);
+                    } catch (Exception e) {
+                        log.error("Failed to add user to group {}: {}", groupName, e.getMessage());
+                    }
+                } else {
+                    log.warn("Group '{}' not found in Keycloak", groupName);
+                }
+            } else {
+                log.warn("Failed to search groups: status={}", groupsResp.getStatusCode());
+            }
+        } catch (Exception e) {
+            log.error("Error while assigning group for new user: {}", e.getMessage());
+        }
+
+        // 4. Create user in local database (persist role and keycloakId)
         User newUser = User.builder()
                 .id(userId)
                 .firstname(request.getFirstname())
@@ -135,6 +173,8 @@ public class AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .phone(normalizedPhone) // Use normalized phone number
+                .keycloakId(userId.toString())
+                .role(requestedRole)
                 .build();
 
         User savedUser = userRepository.save(newUser);

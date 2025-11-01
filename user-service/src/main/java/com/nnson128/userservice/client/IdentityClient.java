@@ -8,6 +8,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -50,5 +51,22 @@ public interface IdentityClient {
     ResponseEntity<?> getUserCompositeRoles(
             @RequestHeader("authorization") String token,
             @PathVariable("userId") String userId);
+
+    @GetMapping(value = "/admin/realms/app-realms/groups")
+    ResponseEntity<?> searchGroups(
+            @RequestHeader("authorization") String token,
+            @RequestParam(value = "search", required = false) String search);
+
+    @PutMapping(value = "/admin/realms/app-realms/users/{userId}/groups/{groupId}")
+    ResponseEntity<?> addUserToGroup(
+            @RequestHeader("authorization") String token,
+            @PathVariable("userId") String userId,
+            @PathVariable("groupId") String groupId);
+
+    @DeleteMapping(value = "/admin/realms/app-realms/users/{userId}/groups/{groupId}")
+    ResponseEntity<?> removeUserFromGroup(
+            @RequestHeader("authorization") String token,
+            @PathVariable("userId") String userId,
+            @PathVariable("groupId") String groupId);
 
 }

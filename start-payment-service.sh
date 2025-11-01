@@ -29,7 +29,15 @@ echo "✅ Build complete"
 echo ""
 
 # Find JAR file
+# First try the usual *-SNAPSHOT.jar produced when finalName is default.
 JAR_FILE=$(find target -name "*-SNAPSHOT.jar" -not -name "*sources.jar" | head -1)
+
+# If not found, pick the first non-original jar in target/ (handles repackaged boot jars
+# which often use the artifactId as the final name, e.g. payment-service.jar).
+if [ -z "$JAR_FILE" ]; then
+    # Use ls and filter out any .jar.original and sources jars. Suppress errors if no matches.
+    JAR_FILE=$(ls target/*.jar 2>/dev/null | grep -v "\.jar\.original$" | grep -v "sources.jar" | head -1 || true)
+fi
 
 if [ -z "$JAR_FILE" ]; then
     echo "❌ No JAR file found in target/"

@@ -86,29 +86,8 @@ const AdminLayout = ({ children }) => {
     {
       key: 'promotions',
       icon: <GiftOutlined style={{ fontSize: '16px' }} />,
-      label: 'Promotions',
+      label: 'Voucher Management',
       onClick: () => navigate('/admin/promotions'),
-    },
-    {
-      key: 'reports',
-      icon: <BarChartOutlined style={{ fontSize: '16px' }} />,
-      label: 'Reports',
-      onClick: () => navigate('/admin/reports'),
-    },
-    {
-      key: 'blog',
-      icon: <BookOutlined style={{ fontSize: '16px' }} />,
-      label: 'Blog',
-      onClick: () => navigate('/admin/blog'),
-    },
-    {
-      type: 'divider',
-    },
-    {
-      key: 'settings',
-      icon: <SettingOutlined style={{ fontSize: '16px' }} />,
-      label: 'Settings',
-      onClick: () => navigate('/admin/settings'),
     },
   ];
 

@@ -18,7 +18,8 @@ public class UserDto {
     private String email;
     private String firstName;
     private String lastName;
-    private List<String> roles;
+    private String role;  // Added: role from DB (ADMIN, STAFF, USER)
+    private List<String> roles;  // roles from Keycloak
 
     public static UserDto from(User user){
         return UserDto.builder()

@@ -43,6 +43,9 @@ public class User implements UserDetails {
     @Column(name = "keycloak_id")
     private String keycloakId;
 
+    @Column(name = "role")
+    private String role;
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

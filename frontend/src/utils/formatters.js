@@ -14,6 +14,21 @@ export const formatCurrency = (value) => {
 };
 
 /**
+ * Format price to USD format
+ * @param {number} value - Amount to format
+ * @returns {string} Formatted string like "$1,234.56"
+ */
+export const formatUSD = (value) => {
+  if (value === null || value === undefined) return 'N/A';
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+};
+
+/**
  * Format number to VND with thousand separators
  * @param {number} value - Amount to format
  * @returns {string} Formatted string like "1.000.000 ₫"

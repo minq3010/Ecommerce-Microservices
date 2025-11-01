@@ -3,6 +3,7 @@ import { Table, Card, Tag, Button, Modal, Empty, Spin, message, Space, Statistic
 import { EyeOutlined, DeleteOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useAuthStore } from '../store';
+import { formatVND } from '../utils/formatters';
 
 const OrdersPage = () => {
   const { token } = useAuthStore();
@@ -93,7 +94,7 @@ const OrdersPage = () => {
       title: 'Total',
       dataIndex: 'totalPrice',
       key: 'totalPrice',
-      render: (price) => <span style={{ fontWeight: 'bold', color: '#ff4d4f' }}>${Number(price || 0).toFixed(2)}</span>,
+      render: (price) => <span style={{ fontWeight: 'bold', color: '#ff4d4f' }}>{formatVND(price)}</span>,
       width: 100,
     },
     {
@@ -192,8 +193,7 @@ const OrdersPage = () => {
             <Statistic
               title="Total Spent"
               value={stats.totalSpent}
-              prefix="$"
-              precision={2}
+              formatter={(value) => formatVND(value)}
               valueStyle={{ color: '#ff4d4f' }}
             />
           </Card>
@@ -292,10 +292,10 @@ const OrdersPage = () => {
               <div key={idx} style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #eee' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                   <span>{item.productName}</span>
-                  <span style={{ fontWeight: 'bold' }}>${Number(item.subtotal || 0).toFixed(2)}</span>
+                  <span style={{ fontWeight: 'bold' }}>{formatVND(Number(item.subtotal || 0))}</span>
                 </div>
                 <div style={{ fontSize: '12px', color: '#999' }}>
-                  {item.quantity} × ${Number(item.price || 0).toFixed(2)}
+                  {item.quantity} × {formatVND(Number(item.price || 0))}
                 </div>
               </div>
             ))}
@@ -308,19 +308,19 @@ const OrdersPage = () => {
             <h4 style={{ marginBottom: '12px', fontWeight: 'bold' }}>Total</h4>
             <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
               <span>Subtotal:</span>
-              <span>${(Number(selectedOrder.totalPrice || 0) - Number(selectedOrder.taxAmount || 0) - Number(selectedOrder.shippingCost || 0)).toFixed(2)}</span>
+              <span>{formatVND(Number(selectedOrder.totalPrice || 0) - Number(selectedOrder.taxAmount || 0) - Number(selectedOrder.shippingCost || 0))}</span>
             </div>
             <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
               <span>Tax:</span>
-              <span>${Number(selectedOrder.taxAmount || 0).toFixed(2)}</span>
+              <span>{formatVND(Number(selectedOrder.taxAmount || 0))}</span>
             </div>
             <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between' }}>
               <span>Shipping:</span>
-              <span>${Number(selectedOrder.shippingCost || 0).toFixed(2)}</span>
+              <span>{formatVND(Number(selectedOrder.shippingCost || 0))}</span>
             </div>
             <div style={{ paddingTop: '12px', borderTop: '2px solid #eee', display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 'bold' }}>
               <span>Total:</span>
-              <span style={{ color: '#ff4d4f' }}>${Number(selectedOrder.totalPrice || 0).toFixed(2)}</span>
+              <span style={{ color: '#ff4d4f' }}>{formatVND(Number(selectedOrder.totalPrice || 0))}</span>
             </div>
           </div>
         )}

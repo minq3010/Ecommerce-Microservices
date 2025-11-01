@@ -5,17 +5,17 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CartItemDTO {
+public class AddCartItemRequest {
+    @NotBlank(message = "Product ID is required")
     private String productId;
-    private String productName;
-    private BigDecimal price;
+    
+    @Positive(message = "Quantity must be greater than 0")
     private Integer quantity;
-    private String imageUrl;
-    private BigDecimal subtotal;
 }

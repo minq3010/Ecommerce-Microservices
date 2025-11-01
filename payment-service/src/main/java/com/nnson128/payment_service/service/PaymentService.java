@@ -1,5 +1,7 @@
 package com.nnson128.payment_service.service;
 
+import com.nnson128.payment_service.client.OrderClient;
+import com.nnson128.payment_service.dto.OrderResponseDTO;
 import com.nnson128.payment_service.dto.PaymentMethodRevenueDTO;
 import com.nnson128.payment_service.dto.PaymentRequestDTO;
 import com.nnson128.payment_service.dto.PaymentResponseDTO;
@@ -26,18 +28,33 @@ import java.util.stream.Collectors;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
+    private final OrderClient orderClient;
 
     // ==================== CREATE & PROCESS ====================
 
     // Create payment
     public PaymentResponseDTO createPayment(String userId, PaymentRequestDTO request) {
+        // Get order details from Order Service
+        OrderResponseDTO order = null;
+        try {
+            order = orderClient.getOrderById(request.getOrderId());
+        } catch (Exception e) {
+            log.error("Failed to fetch order details for orderId: {}", request.getOrderId(), e);
+            throw new RuntimeException("Failed to fetch order details for orderId: " + request.getOrderId(), e);
+        }
+
+        if (order == null) {
+            log.error("Order not found: {}", request.getOrderId());
+            throw new RuntimeException("Order not found: " + request.getOrderId());
+        }
+
         Payment payment = Payment.builder()
                 .orderId(request.getOrderId())
                 .userId(userId)
-                .amount(request.getAmount())
+                .amount(order.getTotalPrice())
                 .paymentMethod(request.getPaymentMethod())
                 .status("PENDING")
-                .description(request.getDescription())
+                .description("Payment for order: " + request.getOrderId())
                 .transactionId(UUID.randomUUID().toString())
                 .build();
 

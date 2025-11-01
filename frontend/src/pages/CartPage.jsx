@@ -3,6 +3,7 @@ import { Table, Button, InputNumber, Space, Card, Row, Col, Empty, message, Divi
 import { DeleteOutlined, ShoppingOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useCartStore } from '../store';
+import { formatVND } from '../utils/formatters';
 
 const CartPage = () => {
   const navigate = useNavigate();
@@ -43,8 +44,8 @@ const CartPage = () => {
       title: 'Price',
       dataIndex: 'price',
       key: 'price',
-      render: (price) => `$${Number(price || 0).toFixed(2)}`,
-      width: 100,
+      render: (price) => formatVND(price),
+      width: 140,
     },
     {
       title: 'Quantity',
@@ -68,8 +69,8 @@ const CartPage = () => {
     {
       title: 'Subtotal',
       key: 'subtotal',
-      render: (_, record) => `$${(Number(record.price || 0) * record.quantity).toFixed(2)}`,
-      width: 120,
+      render: (_, record) => formatVND(Number(record.price || 0) * record.quantity),
+      width: 140,
     },
     {
       title: 'Action',
@@ -132,13 +133,13 @@ const CartPage = () => {
               {/* Items Count */}
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
                 <span>Items ({cart.items.length}):</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>{formatVND(subtotal)}</span>
               </div>
 
               {/* Tax */}
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
                 <span>Tax (10%):</span>
-                <span>${tax.toFixed(2)}</span>
+                <span>{formatVND(tax)}</span>
               </div>
 
               {/* Shipping */}
@@ -147,7 +148,7 @@ const CartPage = () => {
                   <span>Shipping:</span>
                   {shipping === 0 && <Tag color="green">FREE</Tag>}
                 </Space>
-                <span>${shipping.toFixed(2)}</span>
+                <span>{formatVND(shipping)}</span>
               </div>
 
               <Divider />
@@ -161,7 +162,7 @@ const CartPage = () => {
                 color: '#ff4d4f',
               }}>
                 <span>Total:</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{formatVND(total)}</span>
               </div>
 
               {/* Checkout Button */}

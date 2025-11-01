@@ -41,7 +41,38 @@ export const useCartStore = create((set) => ({
       }
     };
   }),
-  
+
+  removeItemFromCart: (productId) => set((state) => {
+    if (!state.cart) return state;
+    const updatedItems = state.cart.items.filter(i => i.productId !== productId);
+    const updatedTotalPrice = updatedItems.reduce((sum, item) => sum + (Number(item.price || 0) * item.quantity), 0);
+    return {
+      cart: {
+        ...state.cart,
+        items: updatedItems,
+        totalPrice: updatedTotalPrice,
+        totalItems: updatedItems.length,
+      }
+    };
+  }),
+
+  updateItemQuantity: (productId, quantity) => set((state) => {
+    if (!state.cart) return state;
+    const updatedItems = state.cart.items.map(item =>
+      item.productId === productId
+        ? { ...item, quantity }
+        : item
+    );
+    const updatedTotalPrice = updatedItems.reduce((sum, item) => sum + (Number(item.price || 0) * item.quantity), 0);
+    return {
+      cart: {
+        ...state.cart,
+        items: updatedItems,
+        totalPrice: updatedTotalPrice,
+      }
+    };
+  }),
+
   clearCart: () => set({ cart: null }),
 }));
 

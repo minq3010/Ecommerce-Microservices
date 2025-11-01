@@ -103,6 +103,17 @@ public class UserController {
                 .build());
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('STAFF')")
+    public ResponseEntity<?> deleteUser(@PathVariable UUID id) {
+        userService.deleteUsers(List.of(id));
+        return ResponseEntity.ok(ApiResponse.builder()
+                .success(true)
+                .message("User deleted successfully")
+                .data(id)
+                .build());
+    }
+
     @DeleteMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('STAFF')")
     public ResponseEntity<?> deleteUsers(@RequestBody DeleteUsersRequest request) {

@@ -3,6 +3,7 @@ import { Table, Button, Modal, message, Space, Tag, Card, Row, Col, Statistic, E
 import { ReloadOutlined, EyeOutlined, DollarOutlined, CheckCircleOutlined, CloseCircleOutlined, UndoOutlined } from '@ant-design/icons';
 import { apiClient } from '../redux/apiClient';
 import AdminLayout from '../layout/AdminLayout';
+import { formatVND } from '../utils/formatters';
 
 const AdminPaymentsPage = () => {
   const [payments, setPayments] = useState([]);
@@ -23,6 +24,16 @@ const AdminPaymentsPage = () => {
   const fetchPayments = async () => {
     setLoading(true);
     try {
+      // Fetch all users first to map userId to email
+      const usersResponse = await apiClient.get('/users?page=0&size=100');
+      const userMap = {};
+      if (usersResponse.data.success) {
+        const users = usersResponse.data.data.content || usersResponse.data.data || [];
+        users.forEach(user => {
+          userMap[user.id] = user.email;
+        });
+      }
+
       let endpoint;
       if (filterStatus) {
         endpoint = `/payments/admin/status/${filterStatus}`;
@@ -34,15 +45,24 @@ const AdminPaymentsPage = () => {
 
       if (response.data.success) {
         const data = response.data.data;
+        let paymentsData = [];
+        
         if (data.content) {
-          setPayments(data.content);
+          paymentsData = data.content;
           setPagination(prev => ({
             ...prev,
             total: data.totalElements
           }));
         } else if (Array.isArray(data)) {
-          setPayments(data);
+          paymentsData = data;
         }
+
+        // Enrich payments with user email
+        const enrichedPayments = paymentsData.map(payment => ({
+          ...payment,
+          userEmail: userMap[payment.userId] || 'Unknown Email'
+        }));
+        setPayments(enrichedPayments);
       }
     } catch (error) {
       message.error('Failed to fetch payments');
@@ -152,10 +172,10 @@ const AdminPaymentsPage = () => {
       render: (id) => <code style={{ fontSize: 11 }}>{id.substring(0, 12)}...</code>,
     },
     {
-      title: '👤 User ID',
-      dataIndex: 'userId',
-      key: 'userId',
-      width: 100,
+      title: '� Email',
+      dataIndex: 'userEmail',
+      key: 'userEmail',
+      width: 180,
       ellipsis: true,
     },
     {
@@ -163,7 +183,7 @@ const AdminPaymentsPage = () => {
       dataIndex: 'amount',
       key: 'amount',
       width: 100,
-      render: (amount) => <strong>${amount?.toFixed(2)}</strong>,
+      render: (amount) => <strong>{formatVND(amount)}</strong>,
       sorter: (a, b) => a.amount - b.amount,
     },
     {
@@ -279,7 +299,8 @@ const AdminPaymentsPage = () => {
               <Card>
                 <Statistic
                   title="💰 Total Amount"
-                  value={`$${statistics.totalAmount?.toFixed(2)}`}
+                  value={statistics.totalAmount}
+                  formatter={(value) => formatVND(value)}
                   valueStyle={{ color: '#faad14' }}
                 />
               </Card>
@@ -288,7 +309,8 @@ const AdminPaymentsPage = () => {
               <Card>
                 <Statistic
                   title="💵 Completed Amount"
-                  value={`$${statistics.completedAmount?.toFixed(2)}`}
+                  value={statistics.completedAmount}
+                  formatter={(value) => formatVND(value)}
                   valueStyle={{ color: '#722ed1' }}
                 />
               </Card>
@@ -324,7 +346,7 @@ const AdminPaymentsPage = () => {
                   title: 'Revenue',
                   dataIndex: 'revenue',
                   key: 'revenue',
-                  render: (revenue) => <strong>${revenue?.toFixed(2)}</strong>,
+                  render: (revenue) => <strong>{formatVND(revenue)}</strong>,
                   sorter: (a, b) => a.revenue - b.revenue,
                 },
               ]}
@@ -406,9 +428,11 @@ const AdminPaymentsPage = () => {
             <Descriptions column={1} bordered>
               <Descriptions.Item label="Payment ID">{selectedPayment.id}</Descriptions.Item>
               <Descriptions.Item label="Order ID">{selectedPayment.orderId}</Descriptions.Item>
-              <Descriptions.Item label="User ID">{selectedPayment.userId}</Descriptions.Item>
+              <Descriptions.Item label="Email">
+                <strong>{selectedPayment.userEmail}</strong>
+              </Descriptions.Item>
               <Descriptions.Item label="Amount">
-                <strong className="text-success">${selectedPayment.amount?.toFixed(2)}</strong>
+                <strong className="text-success">{formatVND(selectedPayment.amount)}</strong>
               </Descriptions.Item>
               <Descriptions.Item label="Payment Method">
                 <Tag color="blue">{selectedPayment.paymentMethod}</Tag>
@@ -428,10 +452,10 @@ const AdminPaymentsPage = () => {
                 {selectedPayment.description || 'N/A'}
               </Descriptions.Item>
               <Descriptions.Item label="Created At">
-                {new Date(selectedPayment.createdAt).toLocaleString()}
+                {new Date(selectedPayment.createdAt).toLocaleString('vi-VN')}
               </Descriptions.Item>
               <Descriptions.Item label="Updated At">
-                {new Date(selectedPayment.updatedAt).toLocaleString()}
+                {new Date(selectedPayment.updatedAt).toLocaleString('vi-VN')}
               </Descriptions.Item>
             </Descriptions>
 

@@ -20,6 +20,7 @@ public class UserResponse {
     private String phone;
     private String avatarUrl;
     private String avatarPublicId;
+    private String role;
 
     public static UserResponse fromUser(User user) {
         return UserResponse.builder()
@@ -30,6 +31,7 @@ public class UserResponse {
                 .phone(user.getPhone())
                 .avatarUrl(user.getAvatarUrl())
                 .avatarPublicId(user.getAvatarPublicId())
+                .role(user.getRole())
                 .build();
     }
 }

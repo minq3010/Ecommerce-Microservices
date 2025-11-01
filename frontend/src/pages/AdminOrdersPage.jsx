@@ -57,12 +57,12 @@ const AdminOrdersPage = () => {
           }));
         }
 
-        // Enrich orders with user name
+        // Enrich orders with user email
         const enrichedOrders = ordersData.map(order => ({
           ...order,
-          userName: userMap[order.userId] 
-            ? `${userMap[order.userId].firstname} ${userMap[order.userId].lastname}`.trim()
-            : 'Unknown User'
+          userEmail: userMap[order.userId] 
+            ? userMap[order.userId].email
+            : 'Unknown Email'
         }));
         setOrders(enrichedOrders);
       }
@@ -108,27 +108,19 @@ const AdminOrdersPage = () => {
 
   const columns = [
     {
-      title: '📋 Order ID',
+      title: '� Customer',
       dataIndex: 'id',
       key: 'id',
-      width: 120,
+      width: 140,
       ellipsis: true,
       render: (id) => <code style={{ fontSize: 11 }}>{id.substring(0, 12)}...</code>,
     },
     {
-      title: '👤 User Name',
-      dataIndex: 'userName',
-      key: 'userName',
-      width: 140,
+      title: '� Email',
+      dataIndex: 'userEmail',
+      key: 'userEmail',
+      width: 180,
       ellipsis: true,
-    },
-    {
-      title: '🔑 User ID',
-      dataIndex: 'userId',
-      key: 'userId',
-      width: 100,
-      ellipsis: true,
-      render: (id) => <code style={{ fontSize: 10 }}>{id.substring(0, 8)}...</code>,
     },
     {
       title: '💰 Total',
@@ -363,8 +355,8 @@ const AdminOrdersPage = () => {
                     <div key={idx} style={{ marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid #eee' }}>
                       <div><strong>{item.productName}</strong></div>
                       <div>Quantity: {item.quantity}</div>
-                      <div>Price: Đ{item.price.toFixed(0)}</div>
-                      <div>Subtotal: <span style={{ color: '#52c41a', fontWeight: 'bold' }}>Đ{item.subtotal.toFixed(0)}</span></div>
+                      <div>Price: {formatVND(item.price)}</div>
+                      <div>Subtotal: <span style={{ color: '#52c41a', fontWeight: 'bold' }}>{formatVND(item.subtotal)}</span></div>
                     </div>
                   ))}
                 </div>

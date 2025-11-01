@@ -120,35 +120,10 @@ const LoginPage = () => {
             )}
 
             {/* Login / Register toggle (compact) */}
-            <div style={{ marginBottom: '12px', textAlign: 'center' }}>
-              <Space split={<span style={{ color: '#e6e6e6' }}>|</span>}>
-                <a
-                  href="#login"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setIsRegister(false);
-                    form.resetFields();
-                  }}
-                  style={{ fontWeight: !isRegister ? 600 : 400 }}
-                >
-                  Login
-                </a>
-                <a
-                  href="#register"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setIsRegister(true);
-                    form.resetFields();
-                  }}
-                  style={{ fontWeight: isRegister ? 600 : 400 }}
-                >
-                  Register
-                </a>
-              </Space>
-            </div>
+            {/* Removed - showing only login form */}
 
             {/* Login Form */}
-            {!isRegister ? (
+            {true ? (
               <Form
                 form={form}
                 layout="vertical"
@@ -201,98 +176,19 @@ const LoginPage = () => {
                   <a href="#forgot">Forgot password?</a>
                 </div>
               </Form>
-            ) : (
-              /* Register Form */
-              <Form
-                form={form}
-                layout="vertical"
-                onFinish={handleRegister}
-                {...loginFormLayout}
-              >
-                <Form.Item
-                  name="name"
-                  label="Full Name"
-                  rules={[{ required: true, message: 'Please enter your name' }]}
-                >
-                  <Input
-                    prefix={<UserOutlined />}
-                    placeholder="Enter your full name"
-                    size="large"
-                    disabled={loading}
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  name="email"
-                  label="Email"
-                  rules={[
-                    { required: true, message: 'Please enter your email' },
-                    { type: 'email', message: 'Invalid email format' },
-                  ]}
-                >
-                  <Input
-                    prefix={<MailOutlined />}
-                    placeholder="Enter your email"
-                    size="large"
-                    disabled={loading}
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  name="password"
-                  label="Password"
-                  rules={[
-                    { required: true, message: 'Please enter your password' },
-                    { min: 6, message: 'Password must be at least 6 characters' },
-                  ]}
-                >
-                  <Input.Password
-                    prefix={<LockOutlined />}
-                    placeholder="Enter password (min 6 characters)"
-                    size="large"
-                    disabled={loading}
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  name="confirmPassword"
-                  label="Confirm Password"
-                  rules={[{ required: true, message: 'Please confirm your password' }]}
-                >
-                  <Input.Password
-                    prefix={<LockOutlined />}
-                    placeholder="Confirm your password"
-                    size="large"
-                    disabled={loading}
-                  />
-                </Form.Item>
-
-                <Form.Item>
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    size="large"
-                    block
-                    loading={loading}
-                    disabled={loading}
-                  >
-                    {loading ? 'Registering...' : 'Register'}
-                  </Button>
-                </Form.Item>
-              </Form>
-            )}
+            ) : null}
 
             {/* Demo Credentials */}
             <div style={{ fontSize: '12px', color: '#999', textAlign: 'center', marginTop: '20px' }}>
               <p style={{ marginBottom: '4px' }}>📝 Demo Credentials:</p>
-              <p style={{ marginBottom: '4px' }}>Email: admin@example.com</p>
-              <p>Password: password123</p>
+              <p style={{ marginBottom: '4px' }}>Email: root@nnson128.io.vn</p>
+              <p>Password: root@nnson128.io.vn</p>
             </div>
           </Card>
 
           {/* Footer */}
           <div style={{ textAlign: 'center', marginTop: '24px', color: '#666' }}>
-            <p>© 2024 ECommerce Platform. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} ECommerce Platform. All rights reserved.</p>
           </div>
         </Col>
       </Row>

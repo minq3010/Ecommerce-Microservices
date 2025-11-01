@@ -3,6 +3,7 @@ import { Table, Button, Modal, Form, Input, InputNumber, message, Space } from '
 import { DeleteOutlined, ShoppingOutlined } from '@ant-design/icons';
 import { cartService } from '../services/cartService';
 import AdminLayout from '../layout/AdminLayout';
+import { formatVND } from '../utils/formatters';
 
 const CartsPage = () => {
   const [carts, setCarts] = useState([]);
@@ -32,7 +33,7 @@ const CartsPage = () => {
       title: 'Total Price',
       dataIndex: 'totalPrice',
       key: 'totalPrice',
-      render: (price) => `$${price}`,
+      render: (price) => formatVND(price),
     },
     {
       title: 'Actions',
@@ -67,7 +68,7 @@ const CartsPage = () => {
             <p><strong>Cart ID:</strong> {selectedCart.id}</p>
             <p><strong>User ID:</strong> {selectedCart.userId}</p>
             <p><strong>Total Items:</strong> {selectedCart.totalItems}</p>
-            <p><strong>Total Price:</strong> ${selectedCart.totalPrice}</p>
+            <p><strong>Total Price:</strong> {formatVND(selectedCart.totalPrice)}</p>
             <h4>Items in Cart:</h4>
             <Table
               columns={[
@@ -78,7 +79,7 @@ const CartsPage = () => {
                   title: 'Price',
                   dataIndex: 'price',
                   key: 'price',
-                  render: (price) => `$${price}`,
+                  render: (price) => formatVND(price),
                 },
               ]}
               dataSource={selectedCart.items || []}
