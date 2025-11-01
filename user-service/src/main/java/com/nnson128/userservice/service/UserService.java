@@ -66,22 +66,25 @@ public class UserService {
             e.printStackTrace();
             // Fallback to database users without Keycloak roles
             return userRepository.findAll().stream()
-                    .map(user -> UserDto.builder()
-                            .id(user.getId().toString())
+                    .map(user -> {
+                        String userId = user.getKeycloakId() != null ? user.getKeycloakId() : user.getId().toString();
+                        return UserDto.builder()
+                            .id(userId)
                             .username(user.getEmail())
                             .email(user.getEmail())
                             .firstName(user.getFirstname())
                             .lastName(user.getLastname())
                             .role(user.getRole())
                             .roles(List.of())
-                            .build())
+                            .build();
+                    })
                     .collect(Collectors.toList());
         }
     }
     
     private UserDto enrichUserWithKeycloakRoles(User dbUser, String accessToken) {
         List<String> roles = List.of();
-        String userId = dbUser.getId().toString();
+        String userId = dbUser.getKeycloakId() != null ? dbUser.getKeycloakId() : dbUser.getId().toString();
         
         // Fetch composite roles from Keycloak (includes inherited roles from groups)
         try {
@@ -99,7 +102,7 @@ public class UserService {
         }
         
         return UserDto.builder()
-                .id(dbUser.getId().toString())
+                .id(userId)
                 .username(dbUser.getEmail())
                 .email(dbUser.getEmail())
                 .firstName(dbUser.getFirstname())

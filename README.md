@@ -19,6 +19,5 @@ Service URLs khi chạy:
 📋 4. Order-service: http://localhost:9003
 👤 5. User-service: http://localhost:9004
 🔔 6. payment-service: http://localhost:9005
-🔔 7. Notification-service: http://localhost:9005
 ⚛️ Frontend: http://localhost:5173
 ```
