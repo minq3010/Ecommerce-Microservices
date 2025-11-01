@@ -32,6 +32,11 @@ const AdminProductsPage = () => {
     setPagination(prev => ({ ...prev, page: 0 }));
   }, [searchText]);
 
+  // Load categories on mount so the Add/Edit product form has data
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
   const fetchCategories = async () => {
     try {
       const response = await apiClient.get('/categories');
@@ -109,7 +114,12 @@ const AdminProductsPage = () => {
     }
   };
 
-  const handleShowModal = (product = null) => {
+  const handleShowModal = async (product = null) => {
+    // Ensure categories are loaded when opening modal (avoid empty select)
+    if (!categories || categories.length === 0) {
+      await fetchCategories();
+    }
+
     if (product) {
       setEditingProduct(product);
       // If editing, transform category object to categoryId for form

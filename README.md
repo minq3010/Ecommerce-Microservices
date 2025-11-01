@@ -21,3 +21,10 @@ Service URLs khi chạy:
 🔔 6. payment-service: http://localhost:9005
 ⚛️ Frontend: http://localhost:5173
 ```
+
+###
+```
+
+sh start-product-service.sh 
+
+```
