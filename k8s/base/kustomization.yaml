@@ -5,6 +5,11 @@ resources:
   # Secrets
   - mysql-secret.yaml
   
+  # Persistent Volumes
+  - mysql-pv.yaml
+  - keycloak-mysql-pv.yaml
+  - redis-pv.yaml
+  
   # Infrastructure
   - mysql-deployment.yaml
   - mysql-service.yaml
