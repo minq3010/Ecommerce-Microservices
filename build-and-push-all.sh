@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# Build and push all microservices to Docker Hub
+# Usage: ./build-and-push-all.sh
+
+set -e
+
+DOCKER_USERNAME="minq3010"
+SERVICES=(
+  "discovery-server"
+  "api-gateway"
+  "product-service"
+  "cart-service"
+  "order-service"
+  "user-service"
+  "payment-service"
+  "frontend"
+)
+
+echo "🚀 Starting build and push process for all services..."
+echo "Docker Hub username: $DOCKER_USERNAME"
+echo ""
+
+for SERVICE in "${SERVICES[@]}"; do
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "📦 Building $SERVICE..."
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  
+  if [ -d "./$SERVICE" ]; then
+    docker build -t "$DOCKER_USERNAME/$SERVICE:latest" "./$SERVICE"
+    
+    echo "📤 Pushing $SERVICE to Docker Hub..."
+    docker push "$DOCKER_USERNAME/$SERVICE:latest"
+    
+    echo "✅ $SERVICE completed successfully!"
+    echo ""
+  else
+    echo "⚠️  Directory ./$SERVICE not found, skipping..."
+    echo ""
+  fi
+done
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✅ All services built and pushed successfully!"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "Next steps:"
+echo "1. Commit and push k8s manifests to GitHub"
+echo "2. Apply Argo CD application: kubectl apply -f k8s/argocd/application.yaml"
+echo "3. Check Argo CD UI to verify deployment"

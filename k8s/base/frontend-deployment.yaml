@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: discovery-server
+  name: frontend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: discovery-server
+      app: frontend
   template:
     metadata:
       labels:
-        app: discovery-server
+        app: frontend
     spec:
       containers:
-      - name: discovery-server
-        image: minq3010/discovery-server:latest
+      - name: frontend
+        image: minq3010/frontend:latest
         imagePullPolicy: Always
         ports:
-        - containerPort: 8761
+        - containerPort: 80

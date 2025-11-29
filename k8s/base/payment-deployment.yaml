@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: product-service
+  name: payment-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: product-service
+      app: payment-service
   template:
     metadata:
       labels:
-        app: product-service
+        app: payment-service
     spec:
       containers:
-      - name: product-service
-        image: minq3010/product-service:latest
+      - name: payment-service
+        image: minq3010/payment-service:latest
         imagePullPolicy: Always
         env:
         - name: SPRING_PROFILES_ACTIVE
@@ -34,7 +34,4 @@ spec:
         - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
           value: http://discovery-server:8761/eureka
         ports:
-        - containerPort: 9001
-          name: http
-        - containerPort: 50051
-          name: grpc
+        - containerPort: 8006

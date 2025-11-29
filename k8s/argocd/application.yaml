@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: "https://github.com/sonnn128/microservice-ecommerce.git"
+    repoURL: "https://github.com/minq3010/Ecommerce-Microservices.git"
     targetRevision: main
     path: k8s/base
   destination:

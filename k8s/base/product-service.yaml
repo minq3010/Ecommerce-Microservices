@@ -4,8 +4,12 @@ metadata:
   name: product-service
 spec:
   ports:
-  - port: 8004
-    targetPort: 8004
+  - port: 9001
+    targetPort: 9001
+    name: http
+  - port: 50051
+    targetPort: 50051
+    name: grpc
   selector:
     app: product-service
   type: ClusterIP

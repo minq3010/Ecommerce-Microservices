@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
       - name: api-gateway
-        image: yourregistry/api-gateway:latest
+        image: minq3010/api-gateway:latest
+        imagePullPolicy: Always
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: k8s
