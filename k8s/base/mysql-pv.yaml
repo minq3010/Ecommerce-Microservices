@@ -11,7 +11,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/Users/quocnm/Java/workspace/microservice-ecommerce/data/mysql"
+    path: "/data/mysql"
     type: Directory
 ---
 apiVersion: v1

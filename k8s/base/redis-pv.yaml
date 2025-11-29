@@ -11,7 +11,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/Users/quocnm/Java/workspace/microservice-ecommerce/data/redis"
+    path: "/data/redis"
     type: Directory
 ---
 apiVersion: v1
