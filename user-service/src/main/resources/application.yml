@@ -21,7 +21,7 @@ spring:
           jwk-set-uri: http://keycloak:8080/realms/app-realms/protocol/openid-connect/certs
 
 server:
-  port: 9007
+  port: 9004
 
 # Eureka Discovery
 eureka:
