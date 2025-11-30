@@ -18,13 +18,16 @@ spec:
       - name: discovery-server
         image: minq3010/discovery-server:latest
         imagePullPolicy: Always
+        env:
+        - name: JAVA_TOOL_OPTIONS
+          value: "-Xms64m -Xmx128m"
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "250m"
+            memory: "128Mi"
+            cpu: "100m"
           limits:
-            memory: "1Gi"
-            cpu: "500m"
+            memory: "256Mi"
+            cpu: "200m"
         ports:
         - containerPort: 8761
         readinessProbe:
