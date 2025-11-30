@@ -4,8 +4,8 @@ metadata:
   name: order-service
 spec:
   ports:
-  - port: 9003
-    targetPort: 9003
+  - port: 8007
+    targetPort: 8007
     name: http
   - port: 50053
     targetPort: 50053

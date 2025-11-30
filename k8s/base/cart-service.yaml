@@ -4,8 +4,8 @@ metadata:
   name: cart-service
 spec:
   ports:
-  - port: 9002
-    targetPort: 9002
+  - port: 8005
+    targetPort: 8005
     name: http
   - port: 50052
     targetPort: 50052

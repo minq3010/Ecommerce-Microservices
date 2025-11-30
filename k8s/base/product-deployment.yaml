@@ -45,7 +45,7 @@ spec:
             memory: "256Mi"
             cpu: "200m"
         ports:
-        - containerPort: 9001
+        - containerPort: 8004
           name: http
         - containerPort: 50051
           name: grpc

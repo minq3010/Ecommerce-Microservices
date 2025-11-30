@@ -4,8 +4,8 @@ metadata:
   name: user-service
 spec:
   ports:
-  - port: 9004
-    targetPort: 9004
+  - port: 8003
+    targetPort: 8003
   selector:
     app: user-service
   type: ClusterIP

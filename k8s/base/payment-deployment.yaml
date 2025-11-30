@@ -45,4 +45,4 @@ spec:
             memory: "256Mi"
             cpu: "200m"
         ports:
-        - containerPort: 9005
+        - containerPort: 8006
