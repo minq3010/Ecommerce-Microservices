@@ -12,6 +12,16 @@ spec:
       labels:
         app: user-service
     spec:
+      initContainers:
+      - name: wait-for-mysql
+        image: busybox:1.35
+        command: ['sh', '-c', 'until nc -z mysql 3306; do echo waiting for mysql; sleep 2; done;']
+      - name: wait-for-keycloak
+        image: busybox:1.35
+        command: ['sh', '-c', 'until nc -z keycloak 8080; do echo waiting for keycloak; sleep 2; done;']
+      - name: wait-for-discovery
+        image: busybox:1.35
+        command: ['sh', '-c', 'until nc -z discovery-server 8761; do echo waiting for discovery; sleep 2; done;']
       containers:
       - name: user-service
         image: minq3010/user-service:latest

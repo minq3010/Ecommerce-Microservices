@@ -12,6 +12,10 @@ spec:
       labels:
         app: api-gateway
     spec:
+      initContainers:
+      - name: wait-for-discovery
+        image: busybox:1.35
+        command: ['sh', '-c', 'until nc -z discovery-server 8761; do echo waiting for discovery; sleep 2; done;']
       containers:
       - name: api-gateway
         image: minq3010/api-gateway:latest
