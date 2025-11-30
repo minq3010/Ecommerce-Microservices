@@ -12,16 +12,6 @@ spec:
       labels:
         app: cart-service
     spec:
-      initContainers:
-      - name: wait-for-mysql
-        image: busybox:1.35
-        command: ['sh', '-c', 'until nc -z mysql 3306; do echo waiting for mysql; sleep 2; done;']
-      - name: wait-for-redis
-        image: busybox:1.35
-        command: ['sh', '-c', 'until nc -z redis 6379; do echo waiting for redis; sleep 2; done;']
-      - name: wait-for-discovery
-        image: busybox:1.35
-        command: ['sh', '-c', 'until nc -z discovery-server 8761; do echo waiting for discovery; sleep 2; done;']
       containers:
       - name: cart-service
         image: minq3010/cart-service:latest

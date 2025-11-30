@@ -12,10 +12,6 @@ spec:
       labels:
         app: api-gateway
     spec:
-      initContainers:
-      - name: wait-for-discovery
-        image: busybox:1.35
-        command: ['sh', '-c', 'until nc -z discovery-server 8761; do echo waiting for discovery; sleep 2; done;']
       containers:
       - name: api-gateway
         image: minq3010/api-gateway:latest
@@ -23,5 +19,12 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: k8s
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
         ports:
         - containerPort: 8888
