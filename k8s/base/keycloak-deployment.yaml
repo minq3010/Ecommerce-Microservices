@@ -55,3 +55,5 @@ spec:
       - name: realm-config
         configMap:
           name: keycloak-realm-config
+      - name: keycloak-data
+        emptyDir: {}
