@@ -19,6 +19,8 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: k8s
+        - name: JAVA_TOOL_OPTIONS
+          value: "-Xms128m -Xmx256m"
         - name: SPRING_DATASOURCE_URL
           value: jdbc:mysql://mysql:3306/app_db?createDatabaseIfNotExist=true
         - name: SPRING_DATASOURCE_USERNAME
@@ -37,6 +39,13 @@ spec:
           value: "6379"
         - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
           value: http://discovery-server:8761/eureka
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
         ports:
         - containerPort: 9002
           name: http
