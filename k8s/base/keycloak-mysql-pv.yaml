@@ -5,7 +5,7 @@ metadata:
   labels:
     type: keycloak-db
 spec:
-  storageClassName: keycloak-manual
+  storageClassName: manual
   capacity:
     storage: 5Gi
   accessModes:
@@ -19,7 +19,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: keycloak-mysql-pvc
 spec:
-  storageClassName: keycloak-manual
+  storageClassName: manual
   accessModes:
     - ReadWriteOnce
   resources:
