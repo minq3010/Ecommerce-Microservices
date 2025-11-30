@@ -2061,6 +2061,3 @@ data:
         "groups" : [ "/Default groups", "/admin group" ]
       } ]
     }
-kind: ConfigMap
-metadata:
-  name: keycloak-realm-config
