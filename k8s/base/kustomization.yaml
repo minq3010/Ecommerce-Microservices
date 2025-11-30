@@ -14,14 +14,17 @@ resources:
   # Infrastructure
   - mysql-deployment.yaml
   - mysql-service.yaml
+  - keycloak-mysql-deployment.yaml
+  - keycloak-mysql-service.yaml
   - redis-deployment.yaml
   - redis-service.yaml
   - keycloak-deployment.yaml
   - keycloak-service.yaml
-  - zookeeper-deployment.yaml
-  - zookeeper-service.yaml
-  - kafka-deployment.yaml
-  - kafka-service.yaml
+  # Kafka/Zookeeper commented out - not used in current setup
+  # - zookeeper-deployment.yaml
+  # - zookeeper-service.yaml
+  # - kafka-deployment.yaml
+  # - kafka-service.yaml
   
   # Discovery & Gateway
   - discovery-deployment.yaml

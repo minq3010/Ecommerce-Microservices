@@ -17,6 +17,16 @@ spec:
         image: quay.io/keycloak/keycloak:25.0.0
         args: ["start-dev","--import-realm"]
         env:
+        - name: KC_DB
+          value: mysql
+        - name: KC_DB_URL_HOST
+          value: keycloak-mysql
+        - name: KC_DB_URL_DATABASE
+          value: keycloak
+        - name: KC_DB_USERNAME
+          value: keycloak
+        - name: KC_DB_PASSWORD
+          value: password
         - name: KEYCLOAK_ADMIN
           value: admin
         - name: KEYCLOAK_ADMIN_PASSWORD
@@ -36,10 +46,10 @@ spec:
           httpGet:
             path: /health/ready
             port: 8080
-          initialDelaySeconds: 60
+          initialDelaySeconds: 90
           periodSeconds: 10
           timeoutSeconds: 5
-          failureThreshold: 6
+          failureThreshold: 10
         livenessProbe:
           httpGet:
             path: /health/live

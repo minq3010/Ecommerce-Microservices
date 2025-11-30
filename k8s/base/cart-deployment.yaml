@@ -29,6 +29,18 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: k8s
+        - name: SPRING_DATASOURCE_URL
+          value: jdbc:mysql://mysql:3306/app_db?createDatabaseIfNotExist=true
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-user
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-password
         - name: SPRING_REDIS_HOST
           value: redis
         - name: SPRING_REDIS_PORT
