@@ -10,6 +10,9 @@ resources:
   - keycloak-mysql-pv.yaml
   - redis-pv.yaml
   
+  # ConfigMaps
+  - keycloak-configmap.yaml
+  
   # Infrastructure
   - mysql-deployment.yaml
   - mysql-service.yaml
