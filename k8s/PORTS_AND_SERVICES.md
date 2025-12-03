@@ -1,28 +1,27 @@
 # 📊 Service Port Mapping & Architecture Overview
 
 ## ✅ Port Allocation Summary (NO CONFLICTS)
-
 ### Infrastructure Services
 | Service | Pod Name | Container Port(s) | Service Port(s) | Type | Notes |
-|---------|----------|-------------------|-----------------|------|-------|
+|---------|----------|-------------------:|----------------:|------:|-------|
 | **MySQL** | `mysql-xxx` | 3306 | 3306 | ClusterIP | Database |
-| **Redis** | `redis-xxx` | 6379 | 6379 | ClusterIP | Cache & Session Store |
-| **Keycloak** | `keycloak-xxx` | 8080 | 8080 | ClusterIP | Authentication & IAM |
-| **Zookeeper** | `zookeeper-xxx` | 2181 | 2181 | ClusterIP | Kafka Coordinator |
-| **Kafka** | `kafka-xxx` | 9092, 29092 | 9092 (external), 29092 (internal) | ClusterIP | Message Queue |
+| **Redis** | `redis-xxx` | 6379 | 6379 | ClusterIP | Cache & session store |
+| **Keycloak** | `keycloak-xxx` | 8080 | 8080 | ClusterIP | Authentication / IAM |
+| **Zookeeper** | `zookeeper-xxx` | 2181 | 2181 | ClusterIP | Kafka coordinator |
+| **Kafka** | `kafka-xxx` | 9092, 29092 | 9092 (external), 29092 (internal) | ClusterIP | Message broker |
 
 ### Application Services (Microservices)
 | Service | Pod Name | HTTP Port | gRPC Port | Service Port(s) | Type | Notes |
-|---------|----------|-----------|-----------|-----------------|------|-------|
-| **Discovery Server** | `discovery-server-xxx` | 8761 | - | 8761 | ClusterIP | Eureka Service Discovery |
-| **API Gateway** | `api-gateway-xxx` | 8888 | - | 8888 | ClusterIP | Main Gateway |
-| **Product Service** | `product-service-xxx` | 9001 | 50051 | 9001, 50051 | ClusterIP | Product Management |
-| **Cart Service** | `cart-service-xxx` | 9002 | 50052 | 9002, 50052 | ClusterIP | Shopping Cart |
-| **Order Service** | `order-service-xxx` | 9003 | 50053 | 9003, 50053 | ClusterIP | Order Processing |
-| **User Service** | `user-service-xxx` | 9004 | - | 9004 | ClusterIP | User Management |
-| **Notification Service** | `notification-service-xxx` | 9005 | - | 9005 | ClusterIP | Notifications |
-| **Payment Service** | `payment-service-xxx` | 8006 | - | 8006 | ClusterIP | Payment Processing |
-| **Frontend** | `frontend-xxx` | 80 | - | 80 | ClusterIP | React UI (Nginx) |
+|---------|----------|----------:|----------:|----------------:|------:|-------|
+| **Discovery Server** | `discovery-server-xxx` | 8761 | - | 8761 | ClusterIP | Eureka service discovery |
+| **API Gateway** | `api-gateway-xxx` | 8888 | - | 8888 | ClusterIP | Main gateway / routing |
+| **Product Service** | `product-service-xxx` | 9001 | 50051 | 9001, 50051 | ClusterIP | Product management |
+| **Cart Service** | `cart-service-xxx` | 9002 | 50052 | 9002, 50052 | ClusterIP | Shopping cart |
+| **Order Service** | `order-service-xxx` | 9003 | 50053 | 9003, 50053 | ClusterIP | Order processing |
+| **User Service** | `user-service-xxx` | 9004 | - | 9004 | ClusterIP | User management |
+| **Notification Service** | `notification-service-xxx` | 9005 | - | 9005 | ClusterIP | Notification consumers |
+| **Payment Service** | `payment-service-xxx` | 8006 | - | 8006 | ClusterIP | Payment processing |
+| **Frontend** | `frontend-xxx` | 80 | - | 80 | ClusterIP | React UI (served via Nginx) |
 
 ## 🔀 Port Range Summary
 

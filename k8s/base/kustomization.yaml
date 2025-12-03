@@ -7,6 +7,7 @@ resources:
   
   # ConfigMaps
   - keycloak-configmap.yaml
+  - mysql-init-configmap.yaml
   
   # Infrastructure
   - mysql-deployment.yaml
