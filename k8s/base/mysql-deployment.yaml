@@ -37,10 +37,10 @@ spec:
               key: mysql-password
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "100m"
-          limits:
             memory: "1Gi"
+            cpu: "200m"
+          limits:
+            memory: "1.5Gi"
             cpu: "500m"
         ports:
         - containerPort: 3306

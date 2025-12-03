@@ -37,6 +37,8 @@ spec:
               key: mysql-password
         - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
           value: http://discovery-server:8761/eureka
+        - name: SERVER_PORT
+          value: "8006"
         resources:
           requests:
             memory: "128Mi"

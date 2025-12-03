@@ -41,6 +41,8 @@ spec:
           value: "6379"
         - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
           value: http://discovery-server:8761/eureka
+        - name: SERVER_PORT
+          value: "8005"
         resources:
           requests:
             memory: "128Mi"
