@@ -5,13 +5,14 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 spec:
+  type: NodePort
   ports:
   - port: 8007
     targetPort: 8007
+    nodePort: 30007
     name: http
   - port: 50053
     targetPort: 50053
     name: grpc
   selector:
     app: order-service
-  type: ClusterIP

@@ -5,9 +5,10 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "4"
 spec:
+  type: NodePort
   ports:
   - port: 8003
     targetPort: 8003
+    nodePort: 30003
   selector:
     app: user-service
-  type: ClusterIP
