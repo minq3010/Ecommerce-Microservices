@@ -39,8 +39,9 @@ spec:
           value: http://discovery-server:8761/eureka
         - name: SERVER_PORT
           value: "8003"
-        - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
-          value: http://keycloak:8080/realms/app-realms
+        # Temporarily disable Keycloak JWT validation for testing
+        # - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+        #   value: http://keycloak:8080/realms/app-realms
         resources:
           requests:
             memory: "256Mi"
