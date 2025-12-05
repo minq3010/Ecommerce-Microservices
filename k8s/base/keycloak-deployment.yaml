@@ -37,10 +37,10 @@ spec:
           value: "-Xms128m -Xmx256m"
         resources:
           requests:
-            memory: "400Mi"
+            memory: "512Mi"  # Tăng từ 400Mi
             cpu: "150m"
           limits:
-            memory: "800Mi"
+            memory: "1Gi"    # Tăng từ 800Mi
             cpu: "400m"
         ports:
         - containerPort: 8080
