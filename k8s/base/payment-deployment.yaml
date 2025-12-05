@@ -41,10 +41,10 @@ spec:
           value: "8006"
         resources:
           requests:
-            memory: "128Mi"
-            cpu: "50m"
+            memory: "300Mi"
+            cpu: "150m"
           limits:
-            memory: "256Mi"
-            cpu: "200m"
+            memory: "400Mi"
+            cpu: "300m"
         ports:
         - containerPort: 8006

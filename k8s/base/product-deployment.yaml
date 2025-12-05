@@ -41,11 +41,11 @@ spec:
           value: "8004"
         resources:
           requests:
-            memory: "200Mi"
-            cpu: "80m"
-          limits:
-            memory: "320Mi"
+            memory: "384Mi"
             cpu: "200m"
+          limits:
+            memory: "600Mi"
+            cpu: "400m"
         ports:
         - containerPort: 8004
           name: http

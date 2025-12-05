@@ -45,11 +45,11 @@ spec:
           value: "8005"
         resources:
           requests:
-            memory: "200Mi"
-            cpu: "80m"
+            memory: "384Mi"
+            cpu: "200m"
           limits:
-            memory: "400Mi"
-            cpu: "250m"
+            memory: "600Mi"
+            cpu: "400m"
         ports:
         - containerPort: 8005
           name: http

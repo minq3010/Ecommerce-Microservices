@@ -44,10 +44,10 @@ spec:
         #   value: http://keycloak:8080/realms/app-realms
         resources:
           requests:
-            memory: "200Mi"
-            cpu: "80m"
-          limits:
-            memory: "320Mi"
+            memory: "384Mi"
             cpu: "200m"
+          limits:
+            memory: "600Mi"
+            cpu: "400m"
         ports:
         - containerPort: 8003

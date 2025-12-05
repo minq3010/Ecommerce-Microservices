@@ -23,11 +23,11 @@ spec:
           value: "-Xms48m -Xmx96m"
         resources:
           requests:
-            memory: "100Mi"
-            cpu: "80m"
+            memory: "200Mi"
+            cpu: "150m"
           limits:
-            memory: "180Mi"
-            cpu: "120m"
+            memory: "300Mi"
+            cpu: "200m"
         ports:
         - containerPort: 8761
         readinessProbe:
