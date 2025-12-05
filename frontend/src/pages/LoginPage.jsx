@@ -181,8 +181,6 @@ const LoginPage = () => {
             {/* Demo Credentials */}
             <div style={{ fontSize: '12px', color: '#999', textAlign: 'center', marginTop: '20px' }}>
               <p style={{ marginBottom: '4px' }}>📝 Demo Credentials:</p>
-              <p style={{ marginBottom: '4px' }}>Email: root@nnson128.io.vn</p>
-              <p>Password: root@nnson128.io.vn</p>
             </div>
           </Card>
 
