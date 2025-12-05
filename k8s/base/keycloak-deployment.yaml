@@ -34,7 +34,7 @@ spec:
         - name: KEYCLOAK_ADMIN_PASSWORD
           value: admin
         - name: JAVA_OPTS
-          value: "-Xms200m -Xmx400m"
+          value: "-Xms128m -Xmx256m"
         resources:
           requests:
             memory: "400Mi"
@@ -54,7 +54,7 @@ spec:
         livenessProbe:
           tcpSocket:
             port: 8080
-          initialDelaySeconds: 180
+          initialDelaySeconds: 300 
           periodSeconds: 20
           timeoutSeconds: 10
           failureThreshold: 5
