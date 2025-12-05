@@ -22,7 +22,7 @@ spec:
         - name: SPRING_PROFILES_ACTIVE
           value: k8s
         - name: JAVA_TOOL_OPTIONS
-          value: "-Xms48m -Xmx96m"
+          value: "-Xms32m -Xmx80m"
         - name: SPRING_DATASOURCE_URL
           value: jdbc:mysql://mysql:3306/app_db?createDatabaseIfNotExist=true
         - name: SPRING_DATASOURCE_USERNAME
@@ -45,9 +45,11 @@ spec:
           value: "8005"
         resources:
           requests:
-            memory: "256Mi"
-            cpu: "100m"
+            memory: "200Mi"
+            cpu: "80m"
           limits:
+            memory: "400Mi"
+            cpu: "250m"
             memory: "512Mi"
             cpu: "300m"
         ports:

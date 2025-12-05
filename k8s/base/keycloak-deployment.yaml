@@ -34,14 +34,14 @@ spec:
         - name: KEYCLOAK_ADMIN_PASSWORD
           value: admin
         - name: JAVA_OPTS
-          value: "-Xms256m -Xmx512m"
+          value: "-Xms200m -Xmx400m"
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "200m"
+            memory: "400Mi"
+            cpu: "150m"
           limits:
-            memory: "1Gi"
-            cpu: "500m"
+            memory: "800Mi"
+            cpu: "400m"
         ports:
         - containerPort: 8080
         readinessProbe:
