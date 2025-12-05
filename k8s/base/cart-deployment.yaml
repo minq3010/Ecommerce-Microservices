@@ -50,8 +50,6 @@ spec:
           limits:
             memory: "400Mi"
             cpu: "250m"
-            memory: "512Mi"
-            cpu: "300m"
         ports:
         - containerPort: 8005
           name: http
