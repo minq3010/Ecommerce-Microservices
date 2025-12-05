@@ -40,8 +40,8 @@ spec:
             memory: "800Mi"
             cpu: "150m"
           limits:
-            memory: "1.2Gi"
-            cpu: "400m"
+            memory: "1Gi"
+            cpu: "300m"
         ports:
         - containerPort: 3306
         readinessProbe:
