@@ -34,14 +34,14 @@ spec:
         - name: KEYCLOAK_ADMIN_PASSWORD
           value: admin
         - name: JAVA_OPTS
-          value: "-Xms128m -Xmx256m"
+          value: "-Xms256m -Xmx384m"
         resources:
           requests:
-            memory: "512Mi"  # Tăng từ 400Mi
-            cpu: "150m"
+            memory: "768Mi"
+            cpu: "200m"
           limits:
-            memory: "1Gi"    # Tăng từ 800Mi
-            cpu: "400m"
+            memory: "1.5Gi"
+            cpu: "500m"
         ports:
         - containerPort: 8080
         readinessProbe:
@@ -54,8 +54,8 @@ spec:
         livenessProbe:
           tcpSocket:
             port: 8080
-          initialDelaySeconds: 300 
-          periodSeconds: 20
+          initialDelaySeconds: 600
+          periodSeconds: 30
           timeoutSeconds: 10
           failureThreshold: 5
         volumeMounts:
