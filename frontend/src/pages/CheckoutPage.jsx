@@ -3,7 +3,6 @@ import { Form, Input, Button, Card, Row, Col, Select, Steps, message, Spin, Divi
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { apiClient } from '../redux/apiClient';
-import { clearCart } from '../redux/slices/cartSlice';
 import { formatVND } from '../utils/formatters';
 
 const CheckoutPage = () => {

@@ -22,11 +22,6 @@ import AdminReportsPage from "./pages/AdminReportsPage";
 import AdminBlogPage from "./pages/AdminBlogPage";
 import AdminSettingsPage from "./pages/AdminSettingsPage";
 import PaymentHistory from "./pages/PaymentHistory";
-// User pages
-import ProductsPage from "./pages/ProductsPage";
-import CartPage from "./pages/CartPage";
-import CheckoutPage from "./pages/CheckoutPage";
-import OrdersPage from "./pages/OrdersPage";
 import { login, logout, verificationCompleted } from "./redux/slices/authSlice";
 import { verificationClient } from "./redux/apiClient";
 
@@ -92,7 +87,7 @@ function App() {
           path="/login"
           element={
             isAuthenticated ? (
-              <Navigate to="/products" replace />
+              <Navigate to="/admin/dashboard" replace />
             ) : (
               <LoginPage />
             )
@@ -160,24 +155,6 @@ function App() {
           path="/admin/settings"
           element={<ProtectedRoute element={<AdminSettingsPage />} />}
         />
-
-        {/* User Shopping Routes */}
-        <Route
-          path="/products"
-          element={<ProtectedRoute element={<ProductsPage />} />}
-        />
-        <Route
-          path="/cart"
-          element={<ProtectedRoute element={<CartPage />} />}
-        />
-        <Route
-          path="/checkout"
-          element={<ProtectedRoute element={<CheckoutPage />} />}
-        />
-        <Route
-          path="/orders"
-          element={<ProtectedRoute element={<OrdersPage />} />}
-        />
         <Route
           path="/payments/history"
           element={<ProtectedRoute element={<PaymentHistory />} />}
@@ -188,7 +165,7 @@ function App() {
           path="/"
           element={
             isAuthenticated ? (
-              <Navigate to="/products" replace />
+              <Navigate to="/admin/dashboard" replace />
             ) : (
               <Navigate to="/login" replace />
             )
