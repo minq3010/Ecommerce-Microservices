@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: minq3010/ecommerce-frontend:latest
+        image: minq3010/frontend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
