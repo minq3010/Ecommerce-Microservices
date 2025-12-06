@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# Build and push all microservices to Docker Hub
+# Build and push all microservices to Docker Hub with multi-platform support
 # Usage: ./build-and-push-all.sh
 
 set -e
 
 DOCKER_USERNAME="minq3010"
+PLATFORM="linux/amd64,linux/arm64"
 SERVICES=(
   "discovery-server"
   "api-gateway"
@@ -17,20 +18,27 @@ SERVICES=(
   "frontend"
 )
 
-echo "🚀 Starting build and push process for all services..."
+echo "🚀 Starting multi-platform build and push process..."
 echo "Docker Hub username: $DOCKER_USERNAME"
+echo "Platform: $PLATFORM"
+echo ""
+
+# Setup buildx
+echo "📦 Setting up Docker buildx..."
+docker buildx create --use --name multiarch 2>/dev/null || docker buildx use multiarch
 echo ""
 
 for SERVICE in "${SERVICES[@]}"; do
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "📦 Building $SERVICE..."
+  echo "📦 Building $SERVICE for $PLATFORM..."
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   
   if [ -d "./$SERVICE" ]; then
-    docker build -t "$DOCKER_USERNAME/$SERVICE:latest" "./$SERVICE"
-    
-    echo "📤 Pushing $SERVICE to Docker Hub..."
-    docker push "$DOCKER_USERNAME/$SERVICE:latest"
+    # Build multi-platform image and push
+    docker buildx build --platform $PLATFORM \
+      -t "$DOCKER_USERNAME/$SERVICE:latest" \
+      --push \
+      "./$SERVICE"
     
     echo "✅ $SERVICE completed successfully!"
     echo ""

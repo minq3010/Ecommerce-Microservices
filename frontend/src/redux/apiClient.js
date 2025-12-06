@@ -1,13 +1,13 @@
 import axios from 'axios';
 
-// Create axios instance with default config
+// Create axios instance with default config - use relative URL
 export const apiClient = axios.create({
-  baseURL: 'http://localhost:8888/api/v1',
+  baseURL: '/api/v1',
 });
 
 // Verification client for token checks without side effects
 const verificationClient = axios.create({
-  baseURL: 'http://localhost:8888/api/v1',
+  baseURL: '/api/v1',
 });
 
 // Add a request interceptor to attach the token to every request
