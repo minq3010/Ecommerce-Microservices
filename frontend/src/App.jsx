@@ -22,6 +22,11 @@ import AdminReportsPage from "./pages/AdminReportsPage";
 import AdminBlogPage from "./pages/AdminBlogPage";
 import AdminSettingsPage from "./pages/AdminSettingsPage";
 import PaymentHistory from "./pages/PaymentHistory";
+// User pages
+import ProductsPage from "./pages/ProductsPage";
+import CartPage from "./pages/CartPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import OrdersPage from "./pages/OrdersPage";
 import { login, logout, verificationCompleted } from "./redux/slices/authSlice";
 import { verificationClient } from "./redux/apiClient";
 
@@ -48,7 +53,7 @@ function App() {
 
         if (response.data && response.data.data) {
           const user = response.data.data;
-          dispatch(login({ user, token })); // This will set isVerified to true
+          dispatch(login({ user, token }));
         } else {
           throw new Error("Invalid token response");
         }
@@ -62,9 +67,8 @@ function App() {
     };
 
     verifyToken();
-  }, [dispatch]); // Removed isAuthenticated and isVerified to prevent re-runs
+  }, [dispatch]);
 
-  // Show loading while verifying token
   if (!isInitialized) {
     return (
       <div
@@ -88,13 +92,15 @@ function App() {
           path="/login"
           element={
             isAuthenticated ? (
-              <Navigate to="/admin/dashboard" replace />
+              <Navigate to="/products" replace />
             ) : (
               <LoginPage />
             )
           }
         />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+        {/* Admin Routes */}
         <Route
           path="/admin"
           element={
@@ -105,7 +111,6 @@ function App() {
             )
           }
         />
-
         <Route
           path="/admin/dashboard"
           element={<ProtectedRoute element={<AdminDashboard />} />}
@@ -156,7 +161,23 @@ function App() {
           element={<ProtectedRoute element={<AdminSettingsPage />} />}
         />
 
-        {/* User Routes */}
+        {/* User Shopping Routes */}
+        <Route
+          path="/products"
+          element={<ProtectedRoute element={<ProductsPage />} />}
+        />
+        <Route
+          path="/cart"
+          element={<ProtectedRoute element={<CartPage />} />}
+        />
+        <Route
+          path="/checkout"
+          element={<ProtectedRoute element={<CheckoutPage />} />}
+        />
+        <Route
+          path="/orders"
+          element={<ProtectedRoute element={<OrdersPage />} />}
+        />
         <Route
           path="/payments/history"
           element={<ProtectedRoute element={<PaymentHistory />} />}
@@ -167,7 +188,7 @@ function App() {
           path="/"
           element={
             isAuthenticated ? (
-              <Navigate to="/admin/dashboard" replace />
+              <Navigate to="/products" replace />
             ) : (
               <Navigate to="/login" replace />
             )
