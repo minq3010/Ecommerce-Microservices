@@ -38,21 +38,27 @@ public class SecurityConfig {
     private CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOriginPatterns(java.util.Arrays.asList("http://localhost:*", "http://127.0.0.1:*"));
+        configuration.setAllowedOriginPatterns(java.util.Arrays.asList("*"));
         configuration.setAllowedMethods(java.util.Arrays.asList(
                 HttpMethod.GET.name(),
                 HttpMethod.POST.name(),
                 HttpMethod.PUT.name(),
                 HttpMethod.DELETE.name(),
-                HttpMethod.OPTIONS.name()
+                HttpMethod.OPTIONS.name(),
+                HttpMethod.PATCH.name()
         ));
         configuration.setAllowedHeaders(java.util.Arrays.asList(
                 "Authorization",
                 "Content-Type",
-                "X-Requested-With"
+                "X-Requested-With",
+                "Accept",
+                "Origin",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers"
         ));
         configuration.setExposedHeaders(java.util.Arrays.asList(
-                "Location"
+                "Location",
+                "Authorization"
         ));
         configuration.setAllowCredentials(true);
 
